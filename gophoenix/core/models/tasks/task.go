@@ -2,18 +2,44 @@ package tasks
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
-type Task struct {
+type Adapter interface {
+	Perform()
+}
+
+type TaskData struct {
 	Type   string          `json:"type" storm:"index"`
 	Params json.RawMessage `json:"params"`
 }
 
-func (t *Task) Valid() bool {
-	switch t.Type {
-	case "HttpGet":
-		_, err := t.AsHttpGet()
-		return err == nil
+type Task struct {
+	TaskData
+	Adapter
+}
+
+func (self *Task) UnmarshalJSON(b []byte) error {
+	type tempTask Task
+	err := json.Unmarshal(b, &self.TaskData)
+	if err != nil {
+		return err
 	}
-	return false
+	self.Adapter, err = self.adapterFromRaw()
+	return err
+}
+
+func (self *Task) adapterFromRaw() (Adapter, error) {
+	switch self.Type {
+	case "HttpGet":
+		temp := &HttpGet{}
+		err := json.Unmarshal(self.Params, temp)
+		return temp, err
+	case "JsonParse":
+		temp := &JsonParse{}
+		err := json.Unmarshal(self.Params, temp)
+		return temp, err
+	}
+
+	return nil, fmt.Errorf("%s is not a supported adapter type", self.Type)
 }

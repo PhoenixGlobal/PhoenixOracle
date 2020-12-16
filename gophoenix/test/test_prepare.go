@@ -5,6 +5,8 @@ import (
 	"PhoenixOracle/gophoenix/core/web"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
+	"log"
 	"net/http/httptest"
 )
 
@@ -29,3 +31,12 @@ func TearDownWeb() {
 	gin.SetMode(gin.DebugMode)
 	server.Close()
 }
+
+func LoadJSON(file string) []byte {
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return content
+}
+

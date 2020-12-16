@@ -2,6 +2,7 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/models/tasks"
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -21,8 +22,7 @@ func TestCreateTasks(t *testing.T) {
 	server := SetUpWeb()
 	defer TearDownWeb()
 
-	//jsonStr := []byte(`{"version": "1.0.0"}`)
-	jsonStr := []byte(`{"subtasks":[{"type": "HttpGet", "params": {"endpoint": "https://bitstamp.net/api/ticker/", "fields": ["last"]}}], "schedule": "* * * * *","version":"1.0.0"}`)
+	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
@@ -44,9 +44,13 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, j.Schedule, "* * * * *", "Wrong schedule saved")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
-	httpGet, err := j.Tasks[0].AsHttpGet()
+	httpGet := j.Tasks[0].Adapter.(*tasks.HttpGet)
 	assert.Nil(t, err)
 	assert.Equal(t, httpGet.Endpoint, "https://bitstamp.net/api/ticker/")
+
+
+	jsonParse := j.Tasks[1].Adapter.(*tasks.JsonParse)
+	assert.Equal(t, jsonParse.Path, []string{"last"})
 }
 
 type JobJSON struct {
@@ -59,7 +63,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 	server := SetUpWeb()
 	defer TearDownWeb()
 
-	jsonStr := []byte(`{"subtasks":[{"type": "ethereumBytes32", "params": {}}], "schedule": "* * * * *","version":"1.0.0"}`)
+	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
 	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
