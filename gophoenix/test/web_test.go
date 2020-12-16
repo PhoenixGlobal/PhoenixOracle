@@ -51,6 +51,11 @@ func TestCreateTasks(t *testing.T) {
 
 	jsonParse := j.Tasks[1].Adapter.(*tasks.JsonParse)
 	assert.Equal(t, jsonParse.Path, []string{"last"})
+
+
+	bytes32 := j.Tasks[2].Adapter.(*tasks.EthBytes32)
+	assert.Equal(t, bytes32.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
+	assert.Equal(t, bytes32.FunctionID, "12345679")
 }
 
 type JobJSON struct {
@@ -73,7 +78,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	assert.Equal(t, `{"errors":["\"ethereumBytes32\" is not a supported adapter type."]}`, string(body), "Repsonse should return JSON")
+	assert.Equal(t, `{"errors":["jobs_not_exist is not a supported adapter type"]}`, string(body), "Repsonse should return JSON")
 }
 
 func TestShowJobs(t *testing.T) {
