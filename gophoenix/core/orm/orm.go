@@ -9,54 +9,25 @@ import (
 	"path"
 )
 
-type phoenixDB interface {
-	GetDB() *storm.DB
-	Close()
-}
-
-type TestDB struct {
-	*storm.DB
-}
-
-type persistentDB struct {
-	*storm.DB
-}
-
-var db phoenixDB
+var db *storm.DB
 
 func Init() {
-	db = persistentDB{initializeDatabase("production")}
+	db = initializeDatabase("production")
 	migrate()
 }
 
 func InitTest() {
-	db = TestDB{initializeDatabase("test")}
+	os.Remove(dbpath("test"))
+	db = initializeDatabase("test")
 	migrate()
 }
 
 func GetDB() *storm.DB {
-	return db.GetDB()
+	return db
 }
 
 func Close() {
 	db.Close()
-}
-
-func (d TestDB) GetDB() *storm.DB {
-	return d.DB
-}
-
-func (d persistentDB) GetDB() *storm.DB {
-	return d.DB
-}
-
-func (d TestDB) Close() {
-	d.GetDB().Close()
-	os.Remove(dbpath("test"))
-}
-
-func (d persistentDB) Close() {
-	d.GetDB().Close()
 }
 
 func initializeDatabase(env string) *storm.DB {

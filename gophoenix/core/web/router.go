@@ -10,5 +10,6 @@ func Router() *gin.Engine {
 	r.Use(gin.Logger(), gin.Recovery())
 	t := controllers.TasksController{}
 	r.POST("/tasks", t.Create)
+	r.GET("/jobs/:id", t.Show)
 	return r
 }

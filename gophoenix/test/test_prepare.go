@@ -1,4 +1,4 @@
-package fixtureprepare
+package test
 
 import (
 	"PhoenixOracle/gophoenix/core/orm"

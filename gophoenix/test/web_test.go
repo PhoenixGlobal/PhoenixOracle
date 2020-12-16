@@ -2,7 +2,6 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/test/fixtureprepare"
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -17,13 +16,13 @@ type TaskJSON struct {
 }
 
 func TestCreateTasks(t *testing.T) {
-	db := fixtureprepare.SetUpDB()
-	defer fixtureprepare.TearDownDB()
-	server := fixtureprepare.SetUpWeb()
-	defer fixtureprepare.TearDownWeb()
+	db := SetUpDB()
+	defer TearDownDB()
+	server := SetUpWeb()
+	defer TearDownWeb()
 
 	//jsonStr := []byte(`{"version": "1.0.0"}`)
-	jsonStr := []byte(`{"subtasks":[{"adapterType": "httpJSON", "adapterParams": {"endpoint": "https://bitstamp.net/api/ticker/", "fields": ["last"]}}], "schedule": "* * * * *","version":"1.0.0"}`)
+	jsonStr := []byte(`{"subtasks":[{"type": "HttpGet", "params": {"endpoint": "https://bitstamp.net/api/ticker/", "fields": ["last"]}}], "schedule": "* * * * *","version":"1.0.0"}`)
 	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
@@ -39,10 +38,15 @@ func TestCreateTasks(t *testing.T) {
 	json.Unmarshal(b, &respJSON)
 
 
-	var j models.Task
+	var j models.Job
 	db.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Schedule, "* * * * *", "Wrong schedule saved")
+	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
+
+	httpGet, err := j.Tasks[0].AsHttpGet()
+	assert.Nil(t, err)
+	assert.Equal(t, httpGet.Endpoint, "https://bitstamp.net/api/ticker/")
 }
 
 type JobJSON struct {
@@ -50,10 +54,12 @@ type JobJSON struct {
 }
 
 func TestCreateInvalidTasks(t *testing.T) {
-	server := fixtureprepare.SetUpWeb()
-	defer fixtureprepare.TearDownWeb()
+	//fixtureprepare.SetUpDB()
+	//defer fixtureprepare.TearDownDB()
+	server := SetUpWeb()
+	defer TearDownWeb()
 
-	jsonStr := []byte(`{"subtasks":[{"adapterType": "ethereumBytes32", "adapterParams": {}}], "schedule": "* * * * *","version":"1.0.0"}`)
+	jsonStr := []byte(`{"subtasks":[{"type": "ethereumBytes32", "params": {}}], "schedule": "* * * * *","version":"1.0.0"}`)
 	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
@@ -64,6 +70,38 @@ func TestCreateInvalidTasks(t *testing.T) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.Equal(t, `{"errors":["\"ethereumBytes32\" is not a supported adapter type."]}`, string(body), "Repsonse should return JSON")
+}
+
+func TestShowJobs(t *testing.T) {
+	db := SetUpDB()
+	defer TearDownDB()
+	server := SetUpWeb()
+	defer TearDownWeb()
+
+	j := models.NewTask()
+	j.Schedule = "*****"
+
+	db.Save(&j)
+
+	resp, err := http.Get(server.URL + "/jobs/" + j.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 200, resp.StatusCode, "Response should be successful")
+	b, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	var respJob models.Job
+	json.Unmarshal(b, &respJob)
+	assert.Equal(t, respJob.Schedule, j.Schedule, "should have the same schedule")
+}
+
+func TestShowNotFoundJobs(t *testing.T) {
+	SetUpDB()
+	defer TearDownDB()
+	server := SetUpWeb()
+	defer TearDownWeb()
+	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
+	assert.Nil(t, err)
+	assert.Equal(t, 404, resp.StatusCode, "Response should be not found")
 }
 
 
