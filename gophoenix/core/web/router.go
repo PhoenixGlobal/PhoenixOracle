@@ -6,7 +6,8 @@ import (
 )
 
 func Router() *gin.Engine {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Logger(), gin.Recovery())
 	t := controllers.TasksController{}
 	r.POST("/tasks", t.Create)
 	return r
