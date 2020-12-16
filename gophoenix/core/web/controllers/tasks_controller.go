@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"PhoenixOracle/core/models"
-	"PhoenixOracle/core/orm"
+	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/orm"
 	"github.com/gin-gonic/gin"
 )
 

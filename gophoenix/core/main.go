@@ -1,8 +1,8 @@
 package main
 
 import (
-	"PhoenixOracle/core/orm"
-	"PhoenixOracle/core/web"
+	"PhoenixOracle/gophoenix/core/orm"
+	"PhoenixOracle/gophoenix/core/web"
 	"log"
 )
 

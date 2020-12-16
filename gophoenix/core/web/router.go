@@ -1,7 +1,7 @@
 package web
 
 import (
-	"PhoenixOracle/core/web/controllers"
+	"PhoenixOracle/gophoenix/core/web/controllers"
 	"github.com/gin-gonic/gin"
 )
 

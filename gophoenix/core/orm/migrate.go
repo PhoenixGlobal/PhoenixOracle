@@ -1,7 +1,7 @@
 package orm
 
 import (
-	"PhoenixOracle/core/models"
+	"PhoenixOracle/gophoenix/core/models"
 	"log"
 )
 
