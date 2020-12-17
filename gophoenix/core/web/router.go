@@ -8,7 +8,7 @@ import (
 func Router() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
-	t := controllers.TasksController{}
+	t := controllers.JobsController{}
 	r.POST("/tasks", t.Create)
 	r.GET("/jobs/:id", t.Show)
 	return r

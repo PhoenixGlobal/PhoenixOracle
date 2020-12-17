@@ -9,7 +9,7 @@ import (
 func TestSave(t *testing.T) {
 	db := SetUpDB()
 	defer TearDownDB()
-	j1 := models.NewTask()
+	j1 := models.NewJob()
 	j1.Schedule = "1 * * * *"
 	db.Save(&j1)
 

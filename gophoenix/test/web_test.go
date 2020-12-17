@@ -58,10 +58,6 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, bytes32.FunctionID, "12345679")
 }
 
-type JobJSON struct {
-	ID string `json:"id"`
-}
-
 func TestCreateInvalidTasks(t *testing.T) {
 	//fixtureprepare.SetUpDB()
 	//defer fixtureprepare.TearDownDB()
@@ -87,7 +83,7 @@ func TestShowJobs(t *testing.T) {
 	server := SetUpWeb()
 	defer TearDownWeb()
 
-	j := models.NewTask()
+	j := models.NewJob()
 	j.Schedule = "*****"
 
 	db.Save(&j)

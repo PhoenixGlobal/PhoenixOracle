@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type TasksController struct{}
+type JobsController struct{}
 
-func (tc *TasksController) Create(c *gin.Context) {
+func (tc *JobsController) Create(c *gin.Context) {
 	db := orm.GetDB()
-	j := models.NewTask()
+	j := models.NewJob()
 	if err := c.ShouldBindJSON(&j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
@@ -25,7 +25,7 @@ func (tc *TasksController) Create(c *gin.Context) {
 	}
 }
 
-func (tc *TasksController) Show(c *gin.Context) {
+func (tc *JobsController) Show(c *gin.Context) {
 	db := orm.GetDB()
 	id := c.Param("id")
 	var j models.Job

@@ -1,6 +1,7 @@
-package tasks
+package models
 
 import (
+	"PhoenixOracle/gophoenix/core/models/tasks"
 	"encoding/json"
 	"fmt"
 )
@@ -20,7 +21,6 @@ type Task struct {
 }
 
 func (self *Task) UnmarshalJSON(b []byte) error {
-	type tempTask Task
 	err := json.Unmarshal(b, &self.TaskData)
 	if err != nil {
 		return err
@@ -32,15 +32,15 @@ func (self *Task) UnmarshalJSON(b []byte) error {
 func (self *Task) adapterFromRaw() (Adapter, error) {
 	switch self.Type {
 	case "HttpGet":
-		temp := &HttpGet{}
+		temp := &tasks.HttpGet{}
 		err := json.Unmarshal(self.Params, temp)
 		return temp, err
 	case "JsonParse":
-		temp := &JsonParse{}
+		temp := &tasks.JsonParse{}
 		err := json.Unmarshal(self.Params, temp)
 		return temp, err
 	case "EthBytes32":
-		temp := &EthBytes32{}
+		temp := &tasks.EthBytes32{}
 		err := json.Unmarshal(self.Params, temp)
 		return temp, err
 	}
