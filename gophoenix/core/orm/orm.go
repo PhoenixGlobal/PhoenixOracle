@@ -2,6 +2,7 @@ package orm
 
 
 import (
+	"fmt"
 	"github.com/asdine/storm"
 	homedir "github.com/mitchellh/go-homedir"
 	"log"
@@ -46,5 +47,7 @@ func dbpath(env string) string {
 	}
 
 	os.MkdirAll(dir, os.FileMode(0700))
-	return path.Join(dir, "db."+env+".bolt")
+	var directory = path.Join(dir, "db."+env+".bolt")
+	fmt.Println("directory  "+directory)
+	return directory
 }
