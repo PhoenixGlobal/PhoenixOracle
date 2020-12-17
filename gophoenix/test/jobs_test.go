@@ -10,7 +10,7 @@ func TestSave(t *testing.T) {
 	db := SetUpDB()
 	defer TearDownDB()
 	j1 := models.NewJob()
-	j1.Schedule = "1 * * * *"
+	j1.Schedule = models.Schedule{Cron: "1 * * * *"}
 	db.Save(&j1)
 
 	var j2 models.Job

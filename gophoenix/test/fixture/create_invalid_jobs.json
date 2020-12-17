@@ -1,5 +1,5 @@
 {
   "tasks": [{ "type": "jobs_not_exist", "params": { } }],
-  "schedule": "* * * * *",
+  "schedule": {"cron": ""},
   "version": "1.0.0"
 }

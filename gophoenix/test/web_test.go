@@ -23,7 +23,7 @@ func TestCreateTasks(t *testing.T) {
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
-	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,6 @@ func TestCreateTasks(t *testing.T) {
 	var j models.Job
 	db.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
-	assert.Equal(t, j.Schedule, "* * * * *", "Wrong schedule saved")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
 	httpGet := j.Tasks[0].Adapter.(*tasks.HttpGet)
@@ -56,6 +55,16 @@ func TestCreateTasks(t *testing.T) {
 	bytes32 := j.Tasks[2].Adapter.(*tasks.EthBytes32)
 	assert.Equal(t, bytes32.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, bytes32.FunctionID, "12345679")
+
+	schedule := j.Schedule
+	assert.Equal(t, schedule.Cron, models.Cron("* 7 * * *"))
+	assert.Equal(t, (*models.Time)(nil), schedule.StartAt, "Wrong start at saved")
+	endAt := models.Time{TimeParse("2020-12-17T14:05:29Z")}
+	assert.Equal(t, endAt, *schedule.EndAt, "Wrong end at saved")
+	runAt0 := models.Time{TimeParse("2020-12-17T14:05:19Z")}
+	assert.Equal(t, runAt0, schedule.RunAt[0], "Wrong run at saved")
+
+
 }
 
 func TestCreateInvalidTasks(t *testing.T) {
@@ -65,7 +74,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
-	resp, err := http.Post(server.URL+"/tasks", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,6 +86,23 @@ func TestCreateInvalidTasks(t *testing.T) {
 	assert.Equal(t, `{"errors":["jobs_not_exist is not a supported adapter type"]}`, string(body), "Repsonse should return JSON")
 }
 
+func TestCreateInvalidCron(t *testing.T) {
+	server := SetUpWeb()
+	defer TearDownWeb()
+
+	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
+	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, 500, resp.StatusCode, "Response should be internal error")
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	assert.Equal(t, `{"errors":["Cron: Failed to parse int from !: strconv.Atoi: parsing \"!\": invalid syntax"]}`, string(body), "Response should return JSON")
+}
+
 func TestShowJobs(t *testing.T) {
 	db := SetUpDB()
 	defer TearDownDB()
@@ -84,7 +110,7 @@ func TestShowJobs(t *testing.T) {
 	defer TearDownWeb()
 
 	j := models.NewJob()
-	j.Schedule = "*****"
+	j.Schedule = models.Schedule{Cron: "1 * * * *"}
 
 	db.Save(&j)
 

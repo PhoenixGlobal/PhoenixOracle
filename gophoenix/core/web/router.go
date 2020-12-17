@@ -9,7 +9,7 @@ func Router() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
 	t := controllers.JobsController{}
-	r.POST("/tasks", t.Create)
+	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
 	return r
 }
