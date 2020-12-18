@@ -10,13 +10,12 @@ import (
 type JobsController struct{}
 
 func (tc *JobsController) Create(c *gin.Context) {
-	db := orm.GetDB()
 	j := models.NewJob()
 	if err := c.ShouldBindJSON(&j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
-	} else if err = db.Save(&j); err != nil {
+	} else if err = orm.Save(&j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
@@ -26,10 +25,9 @@ func (tc *JobsController) Create(c *gin.Context) {
 }
 
 func (tc *JobsController) Show(c *gin.Context) {
-	db := orm.GetDB()
 	id := c.Param("id")
 	var j models.Job
-	err := db.One("ID", id, &j)
+	err := orm.Find("ID", id, &j)
 
 	if err == storm.ErrNotFound {
 		c.JSON(404, gin.H{

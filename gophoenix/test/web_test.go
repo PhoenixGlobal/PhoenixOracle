@@ -3,6 +3,7 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/models/tasks"
+	"PhoenixOracle/gophoenix/core/orm"
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ type TaskJSON struct {
 }
 
 func TestCreateTasks(t *testing.T) {
-	db := SetUpDB()
+	SetUpDB()
 	defer TearDownDB()
 	server := SetUpWeb()
 	defer TearDownWeb()
@@ -39,7 +40,7 @@ func TestCreateTasks(t *testing.T) {
 
 
 	var j models.Job
-	db.One("ID", respJSON.ID, &j)
+	orm.Find("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 

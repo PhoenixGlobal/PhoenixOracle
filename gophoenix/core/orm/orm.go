@@ -51,3 +51,11 @@ func dbpath(env string) string {
 	fmt.Println("directory  "+directory)
 	return directory
 }
+
+func Find(field string, value interface{}, instance interface{}) error {
+	return db.One(field, value, instance)
+}
+
+func Save(data interface{}) error {
+	return db.Save(data)
+}
