@@ -1,4 +1,4 @@
-package orm
+package models
 
 
 import (
@@ -12,23 +12,27 @@ import (
 
 var db *storm.DB
 
-func Init() {
+func InitDB() {
 	db = initializeDatabase("production")
 	migrate()
 }
 
-func InitTest() {
+func InitDBTest() {
 	os.Remove(dbpath("test"))
 	db = initializeDatabase("test")
 	migrate()
 }
 
-func GetDB() *storm.DB {
+func getDB() *storm.DB {
 	return db
 }
 
-func Close() {
-	db.Close()
+func Save(value interface{}) error {
+	return getDB().Save(value)
+}
+
+func CloseDB() {
+	getDB().Close()
 }
 
 func initializeDatabase(env string) *storm.DB {
@@ -56,6 +60,7 @@ func Find(field string, value interface{}, instance interface{}) error {
 	return db.One(field, value, instance)
 }
 
-func Save(data interface{}) error {
-	return db.Save(data)
+
+func Where(field string, value interface{}, instance interface{}) error {
+	return db.Find(field, value, instance)
 }

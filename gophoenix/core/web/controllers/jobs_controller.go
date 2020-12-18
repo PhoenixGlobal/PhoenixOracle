@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/orm"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +14,7 @@ func (tc *JobsController) Create(c *gin.Context) {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
-	} else if err = orm.Save(&j); err != nil {
+	} else if err = models.Save(&j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
@@ -27,7 +26,7 @@ func (tc *JobsController) Create(c *gin.Context) {
 func (tc *JobsController) Show(c *gin.Context) {
 	id := c.Param("id")
 	var j models.Job
-	err := orm.Find("ID", id, &j)
+	err := models.Find("ID", id, &j)
 
 	if err == storm.ErrNotFound {
 		c.JSON(404, gin.H{

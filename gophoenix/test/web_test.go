@@ -3,7 +3,6 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/models/tasks"
-	"PhoenixOracle/gophoenix/core/orm"
 	"bytes"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
@@ -40,7 +39,7 @@ func TestCreateTasks(t *testing.T) {
 
 
 	var j models.Job
-	orm.Find("ID", respJSON.ID, &j)
+	models.Find("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
@@ -105,7 +104,7 @@ func TestCreateInvalidCron(t *testing.T) {
 }
 
 func TestShowJobs(t *testing.T) {
-	db := SetUpDB()
+	SetUpDB()
 	defer TearDownDB()
 	server := SetUpWeb()
 	defer TearDownWeb()
@@ -113,7 +112,7 @@ func TestShowJobs(t *testing.T) {
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "1 * * * *"}
 
-	db.Save(&j)
+	models.Save(&j)
 
 	resp, err := http.Get(server.URL + "/jobs/" + j.ID)
 	assert.Nil(t, err)

@@ -1,10 +1,9 @@
 package test
 
 import (
-	"PhoenixOracle/gophoenix/core/orm"
+	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/web"
 	"github.com/araddon/dateparse"
-	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
@@ -14,13 +13,12 @@ import (
 
 var server *httptest.Server
 
-func SetUpDB() *storm.DB {
-	orm.InitTest()
-	return orm.GetDB()
+func SetUpDB() {
+	models.InitDBTest()
 }
 
 func TearDownDB() {
-	orm.Close()
+	models.CloseDB()
 }
 
 func SetUpWeb() *httptest.Server {

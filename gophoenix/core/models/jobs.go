@@ -33,6 +33,18 @@ func NewJob() Job {
 	return Job{ID: uuid.NewV4().String(), CreatedAt: time.Now()}
 }
 
+func (self *Job) Run() (*JobRun, error) {
+	run := &JobRun{
+		ID:        uuid.NewV4().String(),
+		JobID:     self.ID,
+		CreatedAt: time.Now(),
+	}
+
+	err := Save(run)
+	return run, err
+}
+
+
 func (self *Time) UnmarshalJSON(b []byte) error {
 	var s string
 	err := json.Unmarshal(b, &s)
