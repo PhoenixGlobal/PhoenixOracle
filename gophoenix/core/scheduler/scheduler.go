@@ -10,6 +10,12 @@ type Scheduler struct {
 	cron *cronlib.Cron
 }
 
+func Start() (*Scheduler, error) {
+	sched := New()
+	err := sched.Start()
+	return sched, err
+}
+
 func New() *Scheduler {
 	return &Scheduler{cronlib.New()}
 }
@@ -22,14 +28,18 @@ func (self *Scheduler) Start() error {
 	}
 
 	for _, j := range jobs {
-		var job = j
-		cronStr := string(job.Schedule.Cron)
-		self.cron.AddFunc(cronStr, func() { job.Run() })
+		self.AddJob(j)
 	}
 
 	self.cron.Start()
 	return nil
 }
+
+func (self *Scheduler) AddJob(job models.Job) {
+	cronStr := string(job.Schedule.Cron)
+	self.cron.AddFunc(cronStr, func() { job.Run() })
+}
+
 
 func (self *Scheduler) Stop() {
 	self.cron.Stop()

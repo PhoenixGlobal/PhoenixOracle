@@ -45,3 +45,22 @@ func TestSchedulesWithEmptyCron(t *testing.T) {
 		return jobRuns
 	}).Should(HaveLen(0))
 }
+
+func TestAddJob(t *testing.T) {
+	RegisterTestingT(t)
+	SetUpDB()
+	defer TearDownDB()
+	sched, _ := scheduler.Start()
+	defer sched.Stop()
+
+	j := models.NewJob()
+	j.Schedule = models.Schedule{Cron: "* * * * *"}
+	_ = models.Save(&j)
+	sched.AddJob(j)
+
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		_ = models.Where("JobID", j.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(1))
+}
