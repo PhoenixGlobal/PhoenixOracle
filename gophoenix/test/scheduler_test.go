@@ -27,3 +27,21 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	}).Should(HaveLen(1))
 }
 
+func TestSchedulesWithEmptyCron(t *testing.T) {
+	RegisterTestingT(t)
+	SetUpDB()
+	defer TearDownDB()
+
+	j := models.NewJob()
+	_ = models.Save(&j)
+
+	sched := scheduler.New()
+	_ = sched.Start()
+	defer sched.Stop()
+
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		_ = models.Where("JobID", j.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(0))
+}
