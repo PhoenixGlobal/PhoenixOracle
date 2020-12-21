@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"reflect"
 )
 
 var db *storm.DB
@@ -57,10 +58,35 @@ func dbpath(env string) string {
 }
 
 func Find(field string, value interface{}, instance interface{}) error {
-	return db.One(field, value, instance)
+	err := db.One(field, value, instance)
+	return err
 }
 
+func All(instance interface{}) error {
+	return db.All(instance)
+}
+
+func AllIndexed(field string, instance interface{}) error {
+	err := db.AllByIndex(field, instance)
+	if err == storm.ErrNotFound{
+		emptySlice(instance)
+		return nil
+	}
+	return err
+}
 
 func Where(field string, value interface{}, instance interface{}) error {
-	return db.Find(field, value, instance)
+	err:= db.Find(field, value, instance)
+	if err == storm.ErrNotFound{
+		emptySlice(instance)
+		return nil
+	}
+	return err
 }
+
+func emptySlice(to interface{}) {
+	ref := reflect.ValueOf(to)
+	results := reflect.MakeSlice(reflect.Indirect(ref).Type(),0,0)
+	reflect.Indirect(ref).Set(results)
+}
+
