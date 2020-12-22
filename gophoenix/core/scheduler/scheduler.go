@@ -21,7 +21,7 @@ func New() *Scheduler {
 }
 
 func (self *Scheduler) Start() error {
-	jobs := []models.Job{}
+	jobs,_ := models.JobsWithCron()
 	err := models.AllIndexed("Cron",&jobs)
 	if err != nil {
 		return fmt.Errorf("Scheduler: ", err)

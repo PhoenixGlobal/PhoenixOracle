@@ -47,7 +47,7 @@ func TestWhere(t *testing.T) {
 
 }
 
-func TestAllIndexedNotFound(t *testing.T) {
+func TestAllIndexed(t *testing.T) {
 	SetUpDB()
 	defer TearDownDB()
 
@@ -57,6 +57,14 @@ func TestAllIndexedNotFound(t *testing.T) {
 	err := models.AllIndexed("Cron", &jobs)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(jobs), "Queried array should be empty")
+
+	j2 := models.NewJob()
+	j2.Schedule = models.Schedule{Cron: "2 * * * *"}
+	models.Save(&j2)
+
+	err2 := models.AllIndexed("Cron", &jobs)
+	assert.Nil(t, err2)
+	assert.Equal(t, 1, len(jobs), "Queried array should be 1")
 }
 
 func TestWhereNotFound(t *testing.T) {
