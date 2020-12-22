@@ -3,18 +3,16 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/models/tasks"
+	"PhoenixOracle/gophoenix/core/scheduler"
 	"bytes"
 	"encoding/json"
+	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"testing"
 )
 
-
-type TaskJSON struct {
-	ID string `json:"id"`
-}
 
 func TestCreateTasks(t *testing.T) {
 	SetUpDB()
@@ -30,14 +28,7 @@ func TestCreateTasks(t *testing.T) {
 
 	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
 
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
-
-
-	var respJSON TaskJSON
-	json.Unmarshal(b, &respJSON)
-
-
+	respJSON := JobJSONFromResponse(resp)
 	var j models.Job
 	models.Find("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
@@ -66,6 +57,29 @@ func TestCreateTasks(t *testing.T) {
 
 
 }
+
+func TestCreateJobsIntegration(t *testing.T) {
+	RegisterTestingT(t)
+
+	SetUpDB()
+	defer TearDownDB()
+	server := SetUpWeb()
+	defer TearDownWeb()
+
+	jsonStr := LoadJSON("./fixtures/create_no_op_job.json")
+	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	respJSON := JobJSONFromResponse(resp)
+
+	sched, _ := scheduler.Start()
+	defer sched.Stop()
+
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		_ = models.Where("JobID", respJSON.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(1))
+}
+
 
 func TestCreateInvalidTasks(t *testing.T) {
 	//fixtureprepare.SetUpDB()
