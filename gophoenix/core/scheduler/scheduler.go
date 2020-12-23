@@ -8,21 +8,16 @@ import (
 
 type Scheduler struct {
 	cron *cronlib.Cron
+	orm  models.ORM
 }
 
-func Start() (*Scheduler, error) {
-	sched := New()
-	err := sched.Start()
-	return sched, err
-}
 
-func New() *Scheduler {
-	return &Scheduler{cronlib.New()}
+func New(orm models.ORM) *Scheduler {
+	return &Scheduler{cronlib.New(),orm}
 }
 
 func (self *Scheduler) Start() error {
-	jobs,_ := models.JobsWithCron()
-	err := models.AllIndexed("Cron",&jobs)
+	jobs,err := self.orm.JobsWithCron()
 	if err != nil {
 		return fmt.Errorf("Scheduler: ", err)
 	}
@@ -37,7 +32,7 @@ func (self *Scheduler) Start() error {
 
 func (self *Scheduler) AddJob(job models.Job) {
 	cronStr := string(job.Schedule.Cron)
-	self.cron.AddFunc(cronStr, func() { job.Run() })
+	self.cron.AddFunc(cronStr, func() { self.orm.Save(job.Run()) })
 }
 
 

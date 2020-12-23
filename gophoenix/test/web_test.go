@@ -15,9 +15,10 @@ import (
 
 
 func TestCreateTasks(t *testing.T) {
-	SetUpDB()
-	defer TearDownDB()
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
@@ -30,7 +31,7 @@ func TestCreateTasks(t *testing.T) {
 
 	respJSON := JobJSONFromResponse(resp)
 	var j models.Job
-	models.Find("ID", respJSON.ID, &j)
+	store.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
@@ -61,21 +62,22 @@ func TestCreateTasks(t *testing.T) {
 func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
-	SetUpDB()
-	defer TearDownDB()
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixtures/create_no_op_job.json")
 	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp)
 
-	sched, _ := scheduler.Start()
+	sched:= scheduler.New(store.ORM)
+	sched.Start()
 	defer sched.Stop()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = models.Where("JobID", respJSON.ID, &jobRuns)
+		_ = store.Where("JobID", respJSON.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 }
@@ -84,7 +86,9 @@ func TestCreateJobsIntegration(t *testing.T) {
 func TestCreateInvalidTasks(t *testing.T) {
 	//fixtureprepare.SetUpDB()
 	//defer fixtureprepare.TearDownDB()
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
@@ -101,7 +105,9 @@ func TestCreateInvalidTasks(t *testing.T) {
 }
 
 func TestCreateInvalidCron(t *testing.T) {
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
@@ -118,15 +124,15 @@ func TestCreateInvalidCron(t *testing.T) {
 }
 
 func TestShowJobs(t *testing.T) {
-	SetUpDB()
-	defer TearDownDB()
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "1 * * * *"}
 
-	models.Save(&j)
+	store.Save(&j)
 
 	resp, err := http.Get(server.URL + "/jobs/" + j.ID)
 	assert.Nil(t, err)
@@ -140,9 +146,9 @@ func TestShowJobs(t *testing.T) {
 }
 
 func TestShowNotFoundJobs(t *testing.T) {
-	SetUpDB()
-	defer TearDownDB()
-	server := SetUpWeb()
+	store := Store()
+	defer store.Close()
+	server := SetUpWeb(store)
 	defer TearDownWeb()
 	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
 	assert.Nil(t, err)

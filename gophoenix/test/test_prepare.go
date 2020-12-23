@@ -3,19 +3,25 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/scheduler"
+	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/web"
 	"encoding/json"
 	"github.com/araddon/dateparse"
 	"github.com/gin-gonic/gin"
+	"github.com/onsi/gomega"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"time"
 )
 
 var server *httptest.Server
-var sched *scheduler.Scheduler
+func init() {
+	gomega.SetDefaultEventuallyTimeout(3 * time.Second)
+}
+
 
 type JobJSON struct {
 	ID string `json:"id"`
@@ -31,18 +37,18 @@ func JobJSONFromResponse(resp *http.Response) JobJSON {
 	json.Unmarshal(b, &respJSON)
 	return respJSON
 }
-
-func SetUpDB() {
-	models.InitDBTest()
+func Store() store.Store {
+	os.Remove(models.DBpath("test"))
+	orm := models.InitORM("test")
+	return store.Store{
+		ORM:       orm,
+		Scheduler: scheduler.New(orm),
+	}
 }
 
-func TearDownDB() {
-	models.CloseDB()
-}
-
-func SetUpWeb() *httptest.Server {
+func SetUpWeb(s store.Store) *httptest.Server {
 	gin.SetMode(gin.TestMode)
-	server = httptest.NewServer(web.Router())
+	server = httptest.NewServer(web.Router(s))
 	return server
 }
 

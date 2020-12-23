@@ -2,11 +2,14 @@ package controllers
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 )
 
-type JobsController struct{}
+type JobsController struct{
+	Store store.Store
+}
 
 func (tc *JobsController) Create(c *gin.Context) {
 	j := models.NewJob()
@@ -14,7 +17,7 @@ func (tc *JobsController) Create(c *gin.Context) {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
-	} else if err = models.Save(&j); err != nil {
+	} else if err = tc.Store.Save(&j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
@@ -26,7 +29,7 @@ func (tc *JobsController) Create(c *gin.Context) {
 func (tc *JobsController) Show(c *gin.Context) {
 	id := c.Param("id")
 	var j models.Job
-	err := models.Find("ID", id, &j)
+	err := tc.Store.One("ID", id, &j)
 
 	if err == storm.ErrNotFound {
 		c.JSON(404, gin.H{

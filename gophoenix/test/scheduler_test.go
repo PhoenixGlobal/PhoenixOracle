@@ -10,63 +10,65 @@ import (
 
 func TestLoadingSavedSchedules(t *testing.T) {
 	RegisterTestingT(t)
-	SetUpDB()
-	defer TearDownDB()
+	store := Store()
+	defer store.Close()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "* * * * *"}
-	_ = models.Save(&j)
+	_ = store.Save(&j)
 
 	jobs := []models.Job{}
-	e := models.AllIndexed("Cron", &jobs)
+	e := store.AllByIndex("Cron", &jobs)
 	assert.Equal(t,nil , e)
 	assert.Equal(t, 1, len(jobs))
 
-	sched := scheduler.New()
+	sched := scheduler.New(store.ORM)
 	_ = sched.Start()
 	defer sched.Stop()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = models.Where("JobID", j.ID, &jobRuns)
+		_ = store.Where("JobID", j.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 }
 
 func TestSchedulesWithEmptyCron(t *testing.T) {
 	RegisterTestingT(t)
-	SetUpDB()
-	defer TearDownDB()
+	store := Store()
+	defer store.Close()
 
 	j := models.NewJob()
-	_ = models.Save(&j)
+	_ = store.Save(&j)
 
-	sched := scheduler.New()
+	sched := scheduler.New(store.ORM)
 	_ = sched.Start()
 	defer sched.Stop()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = models.Where("JobID", j.ID, &jobRuns)
+		_ = store.Where("JobID", j.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(0))
 }
 
 func TestAddJob(t *testing.T) {
 	RegisterTestingT(t)
-	SetUpDB()
-	defer TearDownDB()
-	sched, _ := scheduler.Start()
+	store := Store()
+	defer store.Close()
+
+	sched := scheduler.New(store.ORM)
+	sched.Start()
 	defer sched.Stop()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "* * * * *"}
-	_ = models.Save(&j)
+	//_ = store.Save(&j)
 	sched.AddJob(j)
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = models.Where("JobID", j.ID, &jobRuns)
+		_ = store.Where("JobID", j.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 }
