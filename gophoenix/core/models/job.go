@@ -33,8 +33,8 @@ func NewJob() Job {
 	return Job{ID: uuid.NewV4().String(), CreatedAt: time.Now()}
 }
 
-func (self *Job) Run() *JobRun {
-	run := &JobRun{
+func (self Job) Run() JobRun {
+	run := JobRun{
 		ID:        uuid.NewV4().String(),
 		JobID:     self.ID,
 		CreatedAt: time.Now(),

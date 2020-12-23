@@ -28,7 +28,7 @@ func TestJobRunsIndex(t *testing.T) {
 	err := store.Save(&j)
 	assert.Nil(t, err)
 	jr := j.Run()
-	err2 := store.Save(jr)
+	err2 := store.Save(&jr)
 	assert.Nil(t, err)
 	assert.Nil(t, err2)
 

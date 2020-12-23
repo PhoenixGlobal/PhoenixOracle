@@ -63,6 +63,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
 	store := Store()
+	store.Start()
 	defer store.Close()
 	server := SetUpWeb(store)
 	defer TearDownWeb()
