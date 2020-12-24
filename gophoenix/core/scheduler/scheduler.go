@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
 	"fmt"
@@ -34,8 +35,11 @@ func (self *Scheduler) Start() error {
 func (self *Scheduler) AddJob(job models.Job) {
 	cronStr := string(job.Schedule.Cron)
 	self.cron.AddFunc(cronStr, func() {
-		services.StartJob(job.NewRun(), self.orm)
-		 })
+		err := services.StartJob(job.NewRun(), self.orm)
+		if err != nil{
+			logger.GetLogger().Panic(err.Error())
+		}
+	})
 }
 
 

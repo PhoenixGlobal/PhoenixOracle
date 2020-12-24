@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
+	//gock "github.com/h2non/gock.git"
+	gock "gopkg.in/h2non/gock.v1"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -63,6 +65,7 @@ func TestCreateTasks(t *testing.T) {
 
 func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
+	defer gock.Off()
 
 	store := Store()
 	store.Start()
@@ -70,10 +73,15 @@ func TestCreateJobsIntegration(t *testing.T) {
 	server := SetUpWeb(store)
 	defer TearDownWeb()
 
-	jsonStr := LoadJSON("./fixtures/create_no_op_job.json")
+	jsonStr := LoadJSON("./fixtures/create_http_get_job.json")
 	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp)
 
+	expectedResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
+	gock.New("https://www.bitstamp.net").
+		Get("/api/ticker").
+		Reply(200).
+		JSON(expectedResponse)
 	sched:= scheduler.New(store.ORM)
 	sched.Start()
 	defer sched.Stop()
@@ -83,6 +91,15 @@ func TestCreateJobsIntegration(t *testing.T) {
 		_ = store.Where("JobID", respJSON.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
+
+	var job models.Job
+	err := store.One("ID",respJSON.ID, &job)
+	assert.Nil(t,err)
+
+	jobRuns, err = store.JobRunsFor(job)
+	assert.Nil(t, err)
+	jobRun := jobRuns[0]
+	assert.Equal(t, jobRun.Result.Output["value"], expectedResponse)
 }
 
 
