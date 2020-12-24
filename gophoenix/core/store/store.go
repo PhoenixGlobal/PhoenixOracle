@@ -37,3 +37,9 @@ func (self Store) AddJob(job models.Job) error {
 	return nil
 }
 
+func (self Store) JobRunsFor(job models.Job) ([]models.JobRun, error) {
+	var runs []models.JobRun
+	err := self.Where("JobID", job.ID, &runs)
+	return runs, err
+}
+

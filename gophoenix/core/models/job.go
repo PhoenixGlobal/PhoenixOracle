@@ -10,10 +10,10 @@ import (
 )
 
 type Job struct {
-	ID        string       `storm:"id,index,unique"`
-	Schedule  Schedule     `json:"schedule" storm:"inline"`
-	Tasks     []Task        `json:"tasks" storm:"inline"`
-	CreatedAt time.Time     `storm:"index"`
+	ID        string    `storm:"id,index,unique"`
+	Schedule  Schedule  `json:"schedule" storm:"inline"`
+	Tasks     []Task `json:"tasks" storm:"inline"`
+	CreatedAt time.Time `storm:"index"`
 }
 
 type Schedule struct {
@@ -33,11 +33,19 @@ func NewJob() Job {
 	return Job{ID: uuid.NewV4().String(), CreatedAt: time.Now()}
 }
 
-func (self Job) Run() JobRun {
+func (self Job) NewRun() JobRun {
+	taskRuns := make([]TaskRun, len(self.Tasks))
+	for i, task := range self.Tasks {
+		taskRuns[i] = TaskRun{
+			ID:   uuid.NewV4().String(),
+			Task: task,
+		}
+	}
 	run := JobRun{
 		ID:        uuid.NewV4().String(),
 		JobID:     self.ID,
 		CreatedAt: time.Now(),
+		TaskRuns:  taskRuns,
 	}
 
 	return run

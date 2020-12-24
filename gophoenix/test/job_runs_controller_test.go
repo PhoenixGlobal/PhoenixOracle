@@ -27,7 +27,7 @@ func TestJobRunsIndex(t *testing.T) {
 	j.Schedule = models.Schedule{Cron: "schedule test"}
 	err := store.Save(&j)
 	assert.Nil(t, err)
-	jr := j.Run()
+	jr := j.NewRun()
 	err2 := store.Save(&jr)
 	assert.Nil(t, err)
 	assert.Nil(t, err2)

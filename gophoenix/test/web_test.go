@@ -1,8 +1,8 @@
 package test
 
 import (
+	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/models/tasks"
 	"PhoenixOracle/gophoenix/core/scheduler"
 	"bytes"
 	"encoding/json"
@@ -35,16 +35,18 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
-	httpGet := j.Tasks[0].Adapter.(*tasks.HttpGet)
+	adapter1,_ := j.Tasks[0].Adapter()
+	httpGet := adapter1.(*adapters.HttpGet)
 	assert.Nil(t, err)
 	assert.Equal(t, httpGet.Endpoint, "https://bitstamp.net/api/ticker/")
 
 
-	jsonParse := j.Tasks[1].Adapter.(*tasks.JsonParse)
+	adapter2,_ := j.Tasks[1].Adapter()
+	jsonParse := adapter2.(*adapters.JsonParse)
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
-
-	bytes32 := j.Tasks[2].Adapter.(*tasks.EthBytes32)
+	adapter3,_ := j.Tasks[2].Adapter()
+	bytes32 := adapter3.(*adapters.EthBytes32)
 	assert.Equal(t, bytes32.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, bytes32.FunctionID, "12345679")
 
@@ -102,7 +104,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	assert.Equal(t, `{"errors":["jobs_not_exist is not a supported adapter type"]}`, string(body), "Repsonse should return JSON")
+	assert.Equal(t, `{"errors":["jobs_not_exist is not a supported adapters type"]}`, string(body), "Repsonse should return JSON")
 }
 
 func TestCreateInvalidCron(t *testing.T) {
