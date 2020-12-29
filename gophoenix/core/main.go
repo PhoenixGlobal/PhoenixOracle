@@ -9,7 +9,6 @@ import (
 
 func main() {
 	store := store.New()
-	services.InitLogger()
 	sugarLogger := services.GetLogger()
 	defer sugarLogger.Sync()
 

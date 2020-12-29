@@ -16,7 +16,7 @@ type Logger struct {
 	*zap.SugaredLogger
 }
 
-func InitLogger() {
+func init() {
 	writeSyncer := getLogWriter()
 	encoder := getEncoder()
 	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
@@ -53,5 +53,15 @@ func (self *Logger) Write(b []byte) (n int, err error) {
 }
 
 func GetLogger() *Logger {
+	return logger
+}
+
+func LoggerWriter() *Logger {
+	writeSyncer := getLogWriter()
+	encoder := getEncoder()
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+
+	log := zap.New(core/*,zap.AddCaller()*/)
+	logger = &Logger{log.Sugar()}
 	return logger
 }

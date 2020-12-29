@@ -9,7 +9,7 @@ import (
 
 func Router(store storelib.Store) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.LoggerWithWriter(services.GetLogger()), gin.Recovery())
+	r.Use(gin.LoggerWithWriter(services.LoggerWriter()), gin.Recovery())
 	t := controllers.JobsController{store}
 	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
