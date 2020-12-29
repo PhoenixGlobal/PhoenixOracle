@@ -1,7 +1,7 @@
 package web
 
 import (
-	"PhoenixOracle/gophoenix/core/logger"
+	"PhoenixOracle/gophoenix/core/services"
 	storelib "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/web/controllers"
 	"github.com/gin-gonic/gin"
@@ -9,7 +9,7 @@ import (
 
 func Router(store storelib.Store) *gin.Engine {
 	r := gin.New()
-	r.Use(gin.LoggerWithWriter(logger.GetLogger()), gin.Recovery())
+	r.Use(gin.LoggerWithWriter(services.GetLogger()), gin.Recovery())
 	t := controllers.JobsController{store}
 	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
