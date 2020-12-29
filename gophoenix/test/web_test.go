@@ -25,10 +25,9 @@ func TestCreateTasks(t *testing.T) {
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
 	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
 
 	respJSON := JobJSONFromResponse(resp)
@@ -82,7 +81,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 		Get("/api/ticker").
 		Reply(200).
 		JSON(expectedResponse)
-	sched:= scheduler.New(store.ORM)
+	sched:= scheduler.NewScheduler(store.ORM)
 	sched.Start()
 	defer sched.Stop()
 

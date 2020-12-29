@@ -14,7 +14,7 @@ type Scheduler struct {
 }
 
 
-func New(orm models.ORM) *Scheduler {
+func NewScheduler(orm models.ORM) *Scheduler {
 	return &Scheduler{cronlib.New(),orm}
 }
 

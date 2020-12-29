@@ -22,7 +22,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	assert.Equal(t,nil , e)
 	assert.Equal(t, 1, len(jobs))
 
-	sched := scheduler.New(store.ORM)
+	sched := scheduler.NewScheduler(store.ORM)
 	_ = sched.Start()
 	defer sched.Stop()
 
@@ -41,7 +41,7 @@ func TestSchedulesWithEmptyCron(t *testing.T) {
 	j := models.NewJob()
 	_ = store.Save(&j)
 
-	sched := scheduler.New(store.ORM)
+	sched := scheduler.NewScheduler(store.ORM)
 	_ = sched.Start()
 	defer sched.Stop()
 
@@ -57,7 +57,7 @@ func TestAddJob(t *testing.T) {
 	store := Store()
 	defer store.Close()
 
-	sched := scheduler.New(store.ORM)
+	sched := scheduler.NewScheduler(store.ORM)
 	sched.Start()
 	defer sched.Stop()
 

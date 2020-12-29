@@ -42,7 +42,7 @@ func Store() store.Store {
 	orm := models.InitORM("test")
 	return store.Store{
 		ORM:       orm,
-		Scheduler: scheduler.New(orm),
+		Scheduler: scheduler.NewScheduler(orm),
 	}
 }
 

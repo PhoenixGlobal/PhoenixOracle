@@ -14,7 +14,7 @@ func New() Store {
 	orm := models.InitORM("production")
 	return Store{
 		ORM:       orm,
-		Scheduler: scheduler.New(orm),
+		Scheduler: scheduler.NewScheduler(orm),
 	}
 }
 
