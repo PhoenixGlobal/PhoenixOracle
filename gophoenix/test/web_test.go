@@ -3,16 +3,16 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/scheduler"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
-	//gock "github.com/h2non/gock.git"
-	gock "gopkg.in/h2non/gock.v1"
+	"gopkg.in/h2non/gock.v1"
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"time"
 )
 
 
@@ -64,6 +64,7 @@ func TestCreateTasks(t *testing.T) {
 
 func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
+	//RegisterTestingT(t)
 	defer gock.Off()
 
 	store := Store()
@@ -72,7 +73,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	server := SetUpWeb(store)
 	defer TearDownWeb()
 
-	jsonStr := LoadJSON("./fixtures/create_http_get_job.json")
+	jsonStr := LoadJSON("./fixture/create_httpget_job.json")
 	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp)
 
@@ -81,9 +82,6 @@ func TestCreateJobsIntegration(t *testing.T) {
 		Get("/api/ticker").
 		Reply(200).
 		JSON(expectedResponse)
-	sched:= scheduler.NewScheduler(store.ORM)
-	sched.Start()
-	defer sched.Stop()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
@@ -92,13 +90,18 @@ func TestCreateJobsIntegration(t *testing.T) {
 	}).Should(HaveLen(1))
 
 	var job models.Job
-	err := store.One("ID",respJSON.ID, &job)
-	assert.Nil(t,err)
+	err := store.One("ID", respJSON.ID, &job)
+	assert.Nil(t, err)
+	assert.Equal(t, "HttpGet",job.Tasks[0].Type)
 
+	time.Sleep(1000000)
+
+	fmt.Println("66666666666666666666666")
+	fmt.Println(time.Now())
 	jobRuns, err = store.JobRunsFor(job)
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
-	assert.Equal(t, jobRun.Result.Output["value"], expectedResponse)
+	assert.Equal(t, expectedResponse, jobRun.Result.Output["value"])
 }
 
 

@@ -66,6 +66,8 @@ func emptySlice(to interface{}) {
 func (self ORM) JobsWithCron() ([]Job, error) {
 	jobs := []Job{}
 	err := self.AllByIndex("Cron", &jobs)
+	fmt.Println(jobs)
 	return jobs, err
 }
+
 

@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
 	"fmt"
+	"time"
 )
 
 func StartJob(run models.JobRun, orm models.ORM) error {
@@ -17,13 +18,22 @@ func StartJob(run models.JobRun, orm models.ORM) error {
 	var prevRun models.TaskRun
 	for i, taskRun := range run.TaskRuns {
 		prevRun = startTask(taskRun, prevRun.Result)
+		fmt.Println("333333333333333333333")
+		fmt.Println(prevRun.Result.Output)
 		run.TaskRuns[i] = prevRun
-		err = orm.Save(&run)
-		if err != nil {
+		fmt.Println("before ......................")
+		fmt.Println(orm)
+		fmt.Println(time.Now())
+
+		err1 := orm.Save(&run)
+		fmt.Println("after ......................")
+		if err1 != nil {
+			fmt.Println("err hafdahdfhsahfhdsdh")
 			return runJobError(run, err)
 		}
 
 		if prevRun.Result.Error != nil {
+			fmt.Println("err hafdahdfhsahfhdsdh")
 			break
 		}
 	}
@@ -34,6 +44,8 @@ func StartJob(run models.JobRun, orm models.ORM) error {
 	} else {
 		run.Status = "completed"
 	}
+	fmt.Println("444444444444444444")
+	fmt.Println(run.TaskRuns[0].Result)
 
 	return runJobError(run, orm.Save(&run))
 }
@@ -54,6 +66,8 @@ func startTask(run models.TaskRun, input adapters.RunResult) models.TaskRun {
 	} else {
 		run.Status = "completed"
 	}
+	fmt.Println("2222222222222222222222")
+	fmt.Println(run.Result.Output)
 
 	return run
 }

@@ -3,6 +3,7 @@ package store
 import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/scheduler"
+	"fmt"
 )
 
 type Store struct {
@@ -38,8 +39,11 @@ func (self Store) AddJob(job models.Job) error {
 }
 
 func (self Store) JobRunsFor(job models.Job) ([]models.JobRun, error) {
+
+	fmt.Println(self.ORM)
 	var runs []models.JobRun
 	err := self.Where("JobID", job.ID, &runs)
 	return runs, err
 }
+
 

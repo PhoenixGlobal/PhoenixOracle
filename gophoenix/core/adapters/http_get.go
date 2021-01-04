@@ -12,6 +12,10 @@ type HttpGet struct {
 
 func (self HttpGet) Perform(input RunResult) RunResult{
 	response, err := http.Get(self.Endpoint)
+	fmt.Println("***********************")
+	fmt.Println(response)
+	fmt.Println(self.Endpoint)
+	fmt.Println("***********************")
 	if err != nil{
 		return RunResult{
 			Error: err,
@@ -30,8 +34,12 @@ func (self HttpGet) Perform(input RunResult) RunResult{
 			Error: fmt.Errorf(body),
 		}
 	}
-	return RunResult{
+	fmt.Println("!!!!!!!!!!!!!!!!!!!")
+	rs := RunResult{
 		Output: map[string]string{"value":body},
 	}
+	fmt.Println(rs)
+	fmt.Println("!!!!!!!!!!!!!!!!!!!!")
+	return rs
 }
 
