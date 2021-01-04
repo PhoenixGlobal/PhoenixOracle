@@ -56,6 +56,12 @@ func GetLogger() *Logger {
 	return logger
 }
 
+func SetLogger(newLogger *Logger) {
+	defer logger.Sync()
+	logger = newLogger
+}
+
+
 func LoggerWriter() *Logger {
 	writeSyncer := getLogWriter()
 	encoder := getEncoder()
