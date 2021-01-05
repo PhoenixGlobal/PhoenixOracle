@@ -4,7 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
 	"fmt"
-	cronlib "github.com/robfig/cron"
+	cronlib "github.com/mrwonko/cron"
 )
 
 type Scheduler struct {
@@ -44,5 +44,6 @@ func (self *Scheduler) AddJob(job models.Job) {
 
 func (self *Scheduler) Stop() {
 	self.cron.Stop()
+	self.cron.Wait()
 }
 

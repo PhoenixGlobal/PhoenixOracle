@@ -89,6 +89,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 		return jobRuns
 	}).Should(HaveLen(1))
 
+	store.Scheduler.Stop()
 	var job models.Job
 	err := store.One("ID", respJSON.ID, &job)
 	assert.Nil(t, err)
@@ -100,6 +101,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	fmt.Println(time.Now())
 
 	jobRuns, err = store.JobRunsFor(job)
+	assert.Equal(t, 1, len(jobRuns))
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
 

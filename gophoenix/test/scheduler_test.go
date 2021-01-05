@@ -24,13 +24,15 @@ func TestLoadingSavedSchedules(t *testing.T) {
 
 	sched := scheduler.NewScheduler(store.ORM)
 	_ = sched.Start()
-	defer sched.Stop()
+
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
 		_ = store.Where("JobID", j.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
+
+	sched.Stop()
 }
 
 func TestSchedulesWithEmptyCron(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
-	"github.com/robfig/cron"
+	"github.com/mrwonko/cron"
 	uuid "github.com/satori/go.uuid"
 	"time"
 )
