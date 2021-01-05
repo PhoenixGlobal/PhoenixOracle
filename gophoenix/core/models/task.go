@@ -18,13 +18,8 @@ type TaskRun struct {
 	Result adapters.RunResult
 }
 
-func (self *Task) UnmarshalJSON(b []byte) error {
-	type tempType Task
-	err := json.Unmarshal(b, (*tempType)(self))
-	if err != nil {
-		return err
-	}
-	_, err = self.Adapter()
+func (self Task) Validate() error {
+	_, err := self.Adapter()
 	return err
 }
 
