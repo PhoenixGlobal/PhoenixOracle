@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"errors"
-
 	simplejson "github.com/bitly/go-simplejson"
 )
 
@@ -21,11 +20,11 @@ func (self *JsonParse) Perform(input RunResult) RunResult {
 		return RunResult{Error: err}
 	}
 
-	rval, _ := js.Get(self.Path[len(self.Path)-1]).String()
-	return RunResult{
-		Output: map[string]string{"value": rval},
-		Error:  nil,
+	rval, ok := js.CheckGet(self.Path[len(self.Path)-1])
+	if !ok {
+		return RunResult{}
 	}
+	return RunResultWithValue(rval.MustString())
 }
 
 func checkEarlyPath(js *simplejson.Json, path []string) (*simplejson.Json, error) {

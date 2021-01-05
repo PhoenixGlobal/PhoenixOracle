@@ -35,9 +35,7 @@ func (self HttpGet) Perform(input RunResult) RunResult{
 		}
 	}
 	fmt.Println("!!!!!!!!!!!!!!!!!!!")
-	rs := RunResult{
-		Output: map[string]string{"value":body},
-	}
+	rs :=  RunResultWithValue(body)
 	fmt.Println(rs)
 	fmt.Println("!!!!!!!!!!!!!!!!!!!!")
 	return rs
