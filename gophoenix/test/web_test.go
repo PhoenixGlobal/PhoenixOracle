@@ -73,7 +73,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	server := SetUpWeb(store)
 	defer TearDownWeb()
 
-	jsonStr := LoadJSON("./fixture/create_httpget_job.json")
+	jsonStr := LoadJSON("./fixture/create_hello_world_job.json")
 	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp)
 
@@ -98,10 +98,14 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 	fmt.Println("66666666666666666666666")
 	fmt.Println(time.Now())
+
 	jobRuns, err = store.JobRunsFor(job)
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
-	assert.Equal(t, expectedResponse, jobRun.Result.Output["value"])
+
+	assert.Equal(t, expectedResponse, jobRun.TaskRuns[0].Result.Value())
+	jobRun = jobRuns[0]
+	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
 }
 
 
