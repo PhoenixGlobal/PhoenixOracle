@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"time"
 )
 
 type ORM struct {
@@ -35,6 +36,13 @@ func DBpath(env string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if env == "test" {
+		dir = path.Join(dir, "tmp")
+		os.MkdirAll(dir, os.FileMode(0700))
+		return path.Join(dir, "db."+fmt.Sprintf("%d", time.Now().UnixNano())+".bolt")
+	}
+
 
 	os.MkdirAll(dir, os.FileMode(0700))
 	var directory = path.Join(dir, "db."+env+".bolt")

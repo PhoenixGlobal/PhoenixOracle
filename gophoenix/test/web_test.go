@@ -16,6 +16,7 @@ import (
 
 
 func TestCreateTasks(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
 
@@ -62,6 +63,7 @@ func TestCreateTasks(t *testing.T) {
 }
 
 func TestCreateJobsIntegration(t *testing.T) {
+	t.Parallel()
 	RegisterTestingT(t)
 	//RegisterTestingT(t)
 	defer gock.Off()

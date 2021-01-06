@@ -14,11 +14,16 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 var server *httptest.Server
 func init() {
+	if err := os.RemoveAll(filepath.Dir(models.DBpath("test"))); err != nil {
+		log.Println(err)
+	}
+
 	gomega.SetDefaultEventuallyTimeout(3 * time.Second)
 }
 
@@ -38,7 +43,6 @@ func JobJSONFromResponse(resp *http.Response) JobJSON {
 	return respJSON
 }
 func Store() store.Store {
-	os.Remove(models.DBpath("test"))
 	orm := models.InitORM("test")
 	return store.Store{
 		ORM:       orm,

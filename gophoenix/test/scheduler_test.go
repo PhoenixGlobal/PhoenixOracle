@@ -9,6 +9,7 @@ import (
 )
 
 func TestLoadingSavedSchedules(t *testing.T) {
+	t.Parallel()
 	RegisterTestingT(t)
 	store := Store()
 	defer store.Close()
@@ -55,6 +56,7 @@ func TestSchedulesWithEmptyCron(t *testing.T) {
 }
 
 func TestAddJob(t *testing.T) {
+	t.Parallel()
 	RegisterTestingT(t)
 	store := Store()
 	defer store.Close()
