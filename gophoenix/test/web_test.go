@@ -5,7 +5,6 @@ import (
 	"PhoenixOracle/gophoenix/core/models"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -97,8 +96,6 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 	time.Sleep(1000000)
 
-	fmt.Println("66666666666666666666666")
-	fmt.Println(time.Now())
 
 	jobRuns, err = store.JobRunsFor(job)
 	assert.Equal(t, 1, len(jobRuns))
@@ -129,7 +126,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	assert.Equal(t, `{"errors":["jobs_not_exist is not a supported adapters type"]}`, string(body), "Repsonse should return JSON")
+	assert.Equal(t, `{"errors":["Cron: Empty spec string"]}`, string(body), "Repsonse should return JSON")
 }
 
 func TestCreateInvalidCron(t *testing.T) {
