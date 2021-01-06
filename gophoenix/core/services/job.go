@@ -2,6 +2,7 @@ package services
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
+	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
 	"fmt"
 )
@@ -13,7 +14,7 @@ func StartJob(run models.JobRun, orm models.ORM) error {
 		return runJobError(run, err)
 	}
 
-	GetLogger().Infow("starting job", run.ForLogger()...)
+	logger.GetLogger().Infow("starting job", run.ForLogger()...)
 	var prevRun models.TaskRun
 	for i, taskRun := range run.TaskRuns {
 		prevRun = startTask(taskRun, prevRun.Result)

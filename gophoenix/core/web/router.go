@@ -1,7 +1,7 @@
 package web
 
 import (
-	"PhoenixOracle/gophoenix/core/services"
+	"PhoenixOracle/gophoenix/core/logger"
 	storelib "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/web/controllers"
 	"bytes"
@@ -14,7 +14,7 @@ import (
 
 func Router(store storelib.Store) *gin.Engine {
 	r := gin.New()
-	r.Use(handlerFunc(services.LoggerWriter()), gin.Recovery())
+	r.Use(handlerFunc(logger.LoggerWriter()), gin.Recovery())
 	t := controllers.JobsController{store}
 	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
@@ -24,7 +24,7 @@ func Router(store storelib.Store) *gin.Engine {
 	return r
 }
 
-func handlerFunc(logger *services.Logger) gin.HandlerFunc {
+func handlerFunc(logger *logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		buf, _ := ioutil.ReadAll(c.Request.Body)
 		rdr := bytes.NewBuffer(buf)

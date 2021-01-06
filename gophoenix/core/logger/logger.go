@@ -1,4 +1,4 @@
-package services
+package logger
 
 import (
 	"github.com/mitchellh/go-homedir"
