@@ -13,7 +13,7 @@ func StartJob(run models.JobRun, orm models.ORM) error {
 		return runJobError(run, err)
 	}
 
-	adapters.GetLogger().Infow("starting job", run.ForLogger()...)
+	GetLogger().Infow("starting job", run.ForLogger()...)
 	var prevRun models.TaskRun
 	for i, taskRun := range run.TaskRuns {
 		prevRun = startTask(taskRun, prevRun.Result)

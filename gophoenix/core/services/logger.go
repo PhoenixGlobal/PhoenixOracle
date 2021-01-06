@@ -1,4 +1,4 @@
-package adapters
+package services
 
 import (
 	"github.com/mitchellh/go-homedir"

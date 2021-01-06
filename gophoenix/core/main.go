@@ -1,7 +1,7 @@
 package main
 
 import (
-	"PhoenixOracle/gophoenix/core/adapters"
+	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/web"
 	"log"
@@ -9,7 +9,7 @@ import (
 
 func main() {
 	store := store.New()
-	sugarLogger := adapters.GetLogger()
+	sugarLogger := services.GetLogger()
 	defer sugarLogger.Sync()
 
 	r := web.Router(store)
