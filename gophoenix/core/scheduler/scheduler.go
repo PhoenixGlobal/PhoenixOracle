@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
 	"fmt"
@@ -36,7 +37,7 @@ func (self *Scheduler) AddJob(job models.Job) {
 	self.cron.AddFunc(cronStr, func() {
 		err := services.StartJob(job.NewRun(), self.orm)
 		if err != nil{
-			services.GetLogger().Panic(err.Error())
+			adapters.GetLogger().Panic(err.Error())
 		}
 	})
 }
