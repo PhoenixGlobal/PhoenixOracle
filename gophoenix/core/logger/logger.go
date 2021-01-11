@@ -1,12 +1,9 @@
 package logger
 
 import (
-	"github.com/mitchellh/go-homedir"
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
-	"os"
 	"path"
 )
 
@@ -16,8 +13,9 @@ type Logger struct {
 	*zap.SugaredLogger
 }
 
+const log_dir = "./phoenix"
 func init() {
-	writeSyncer := getLogWriter()
+	writeSyncer := getLogWriter(log_dir)
 	encoder := getEncoder()
 	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
 
@@ -29,13 +27,8 @@ func getEncoder() zapcore.Encoder {
 	return zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 }
 
-func getLogWriter() zapcore.WriteSyncer {
-	dir, err := homedir.Expand("~/.phoenix")
-	if err != nil {
-		log.Fatal(err)
-	}
+func getLogWriter(dir string) zapcore.WriteSyncer {
 	destination := path.Join(dir, "test.log")
-	os.Create(destination)
 	lumberJackLogger := &lumberjack.Logger{
 		Filename:   destination,
 		MaxSize:    10,
@@ -45,6 +38,21 @@ func getLogWriter() zapcore.WriteSyncer {
 	}
 
 	return zapcore.AddSync(lumberJackLogger)
+}
+
+func NewLogger(dir string) *Logger {
+	writeSyncer := getLogWriter(dir)
+	encoder := getEncoder()
+	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
+
+	log := zap.New(core,zap.AddCaller())
+	logger = &Logger{log.Sugar()}
+	return logger
+}
+
+func SetLoggerDir(dir string) {
+	defer logger.Sync()
+	logger = NewLogger(dir)
 }
 
 func (self *Logger) Write(b []byte) (n int, err error) {
@@ -63,11 +71,31 @@ func SetLogger(newLogger *Logger) {
 
 
 func LoggerWriter() *Logger {
-	writeSyncer := getLogWriter()
+	writeSyncer := getLogWriter("")
 	encoder := getEncoder()
 	core := zapcore.NewCore(encoder, writeSyncer, zapcore.DebugLevel)
 
 	log := zap.New(core/*,zap.AddCaller()*/)
 	logger = &Logger{log.Sugar()}
 	return logger
+}
+
+func Infow(msg string, keysAndValues ...interface{}) {
+	logger.Infow(msg, keysAndValues...)
+}
+
+func Info(args ...interface{}) {
+	logger.Info(args)
+}
+
+func Fatal(args ...interface{}) {
+	logger.Fatal(args)
+}
+
+func Panic(args ...interface{}) {
+	logger.Panic(args)
+}
+
+func Sync() error {
+	return logger.Sync()
 }

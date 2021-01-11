@@ -2,13 +2,13 @@ package controllers
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/services"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 )
 
 type JobsController struct{
-	Store store.Store
+	Store *services.Store
 }
 
 func (tc *JobsController) Create(c *gin.Context) {

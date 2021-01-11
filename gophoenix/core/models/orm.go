@@ -1,29 +1,26 @@
 package models
 
-
 import (
 	"fmt"
 	"github.com/asdine/storm"
-	homedir "github.com/mitchellh/go-homedir"
 	"log"
-	"os"
 	"path"
 	"reflect"
-	"time"
 )
 
 type ORM struct {
 	*storm.DB
 }
 
-func InitORM(env string) ORM {
-	orm := ORM{initializeDatabase(env)}
+func NewORM(dir string) *ORM {
+	path := path.Join(dir, "db.bolt")
+	orm := &ORM{initializeDatabase(path)}
 	orm.migrate()
 	return orm
 }
 
-func initializeDatabase(env string) *storm.DB {
-	db, err := storm.Open(DBpath(env))
+func initializeDatabase(path string) *storm.DB {
+	db, err := storm.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,31 +28,12 @@ func initializeDatabase(env string) *storm.DB {
 	return db
 }
 
-func DBpath(env string) string {
-	dir, err := homedir.Expand("~/.phoenix")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if env == "test" {
-		dir = path.Join(dir, "tmp")
-		os.MkdirAll(dir, os.FileMode(0700))
-		return path.Join(dir, "db."+fmt.Sprintf("%d", time.Now().UnixNano())+".bolt")
-	}
-
-
-	os.MkdirAll(dir, os.FileMode(0700))
-	var directory = path.Join(dir, "db."+env+".bolt")
-	fmt.Println("directory  "+directory)
-	return directory
-}
-
-func (self ORM) InitBucket(model interface{}) error {
+func (self *ORM) InitBucket(model interface{}) error {
 	return self.Init(model)
 }
 
 
-func (self ORM) Where(field string, value interface{}, instance interface{}) error {
+func (self *ORM) Where(field string, value interface{}, instance interface{}) error {
 	err:= self.Find(field, value, instance)
 	if err == storm.ErrNotFound{
 		emptySlice(instance)
@@ -71,7 +49,7 @@ func emptySlice(to interface{}) {
 }
 
 
-func (self ORM) JobsWithCron() ([]Job, error) {
+func (self *ORM) JobsWithCron() ([]Job, error) {
 	jobs := []Job{}
 	err := self.AllByIndex("Cron", &jobs)
 	fmt.Println(jobs)

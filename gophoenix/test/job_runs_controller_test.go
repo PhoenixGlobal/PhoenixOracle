@@ -18,10 +18,10 @@ type JobRun struct {
 }
 
 func TestJobRunsIndex(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "schedule test"}

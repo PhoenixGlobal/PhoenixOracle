@@ -2,7 +2,7 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/scheduler"
+	"PhoenixOracle/gophoenix/core/services"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -23,7 +23,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	assert.Equal(t,nil , e)
 	assert.Equal(t, 1, len(jobs))
 
-	sched := scheduler.NewScheduler(store.ORM)
+	sched := services.NewScheduler(store.ORM)
 	_ = sched.Start()
 
 
@@ -44,7 +44,7 @@ func TestSchedulesWithEmptyCron(t *testing.T) {
 	j := models.NewJob()
 	_ = store.Save(&j)
 
-	sched := scheduler.NewScheduler(store.ORM)
+	sched := services.NewScheduler(store.ORM)
 	_ = sched.Start()
 	defer sched.Stop()
 
@@ -61,7 +61,7 @@ func TestAddJob(t *testing.T) {
 	store := Store()
 	defer store.Close()
 
-	sched := scheduler.NewScheduler(store.ORM)
+	sched := services.NewScheduler(store.ORM)
 	sched.Start()
 	defer sched.Stop()
 

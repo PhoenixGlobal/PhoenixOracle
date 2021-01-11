@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func StartJob(run models.JobRun, orm models.ORM) error {
+func StartJob(run models.JobRun, orm *models.ORM) error {
 	run.Status = "in progress"
 	err := orm.Save(&run)
 	if err != nil {

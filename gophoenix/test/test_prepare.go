@@ -1,30 +1,41 @@
 package test
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/scheduler"
-	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/logger"
+	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/web"
 	"encoding/json"
+	"fmt"
 	"github.com/araddon/dateparse"
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/go-homedir"
 	"github.com/onsi/gomega"
+	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
+	"path"
 	"time"
 )
 
-var server *httptest.Server
+type TestStore struct {
+	*services.Store
+	Server *httptest.Server
+}
+const testRootDir = "./tmp/test"
+
 func init() {
-	if err := os.RemoveAll(filepath.Dir(models.DBpath("test"))); err != nil {
+	dir, err := homedir.Expand(testRootDir)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	if err = os.RemoveAll(dir); err != nil {
 		log.Println(err)
 	}
 
-	gomega.SetDefaultEventuallyTimeout(3 * time.Second)
+	gomega.SetDefaultEventuallyTimeout(2 * time.Second)
 }
 
 
@@ -32,9 +43,8 @@ type JobJSON struct {
 	ID string `json:"id"`
 }
 
-func JobJSONFromResponse(resp *http.Response) JobJSON {
-	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+func JobJSONFromResponse(body io.Reader) JobJSON {
+	b, err := ioutil.ReadAll(body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,23 +52,28 @@ func JobJSONFromResponse(resp *http.Response) JobJSON {
 	json.Unmarshal(b, &respJSON)
 	return respJSON
 }
-func Store() store.Store {
-	orm := models.InitORM("test")
-	return store.Store{
-		ORM:       orm,
-		Scheduler: scheduler.NewScheduler(orm),
+func Store() *TestStore {
+	config := services.NewConfig(path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())))
+	logger.SetLoggerDir(config.RootDir)
+	store := services.NewStore(config)
+	return &TestStore{
+		Store: store,
 	}
 }
 
-func SetUpWeb(s store.Store) *httptest.Server {
+func (self *TestStore)SetUpWeb() *httptest.Server {
 	gin.SetMode(gin.TestMode)
-	server = httptest.NewServer(web.Router(s))
+	server := httptest.NewServer(web.Router(self.Store))
+	self.Server = server
 	return server
 }
 
-func TearDownWeb() {
-	gin.SetMode(gin.DebugMode)
-	server.Close()
+func (self *TestStore)Close()() {
+	self.Store.Close()
+	if self.Server != nil {
+		gin.SetMode(gin.DebugMode)
+		self.Server.Close()
+	}
 }
 
 func LoadJSON(file string) []byte {

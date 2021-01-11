@@ -2,16 +2,19 @@ package main
 
 import (
 	"PhoenixOracle/gophoenix/core/logger"
-	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/web"
 	"log"
 )
 
 func main() {
-	store := store.New()
+	config := services.NewConfig("~/.phoenix")
+	logger.SetLoggerDir(config.RootDir)
+	store := services.NewStore(config)
 	sugarLogger := logger.GetLogger()
 	defer sugarLogger.Sync()
 
+	services.Authenticate(store)
 	r := web.Router(store)
 	err := store.Start()
 	if err != nil{

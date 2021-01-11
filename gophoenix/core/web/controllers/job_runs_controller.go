@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"PhoenixOracle/gophoenix/core/models"
-	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/services"
 	"github.com/gin-gonic/gin"
 )
 
 type JobRunsController struct{
-	Store store.Store
+	Store *services.Store
 }
 
 func (self *JobRunsController) Index(c *gin.Context) {

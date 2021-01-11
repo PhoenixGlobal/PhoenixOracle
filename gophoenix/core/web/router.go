@@ -2,7 +2,7 @@ package web
 
 import (
 	"PhoenixOracle/gophoenix/core/logger"
-	storelib "PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/web/controllers"
 	"bytes"
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func Router(store storelib.Store) *gin.Engine {
+func Router(store *services.Store) *gin.Engine {
 	r := gin.New()
 	r.Use(handlerFunc(logger.LoggerWriter()), gin.Recovery())
 	t := controllers.JobsController{store}

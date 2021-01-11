@@ -20,8 +20,7 @@ func TestCreateTasks(t *testing.T) {
 	store := Store()
 	defer store.Close()
 
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -30,7 +29,8 @@ func TestCreateTasks(t *testing.T) {
 	//}
 	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
 
-	respJSON := JobJSONFromResponse(resp)
+	defer resp.Body.Close()
+	respJSON := JobJSONFromResponse(resp.Body)
 	var j models.Job
 	store.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
@@ -71,12 +71,12 @@ func TestCreateJobsIntegration(t *testing.T) {
 	store := Store()
 	store.Start()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_hello_world_job.json")
 	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
-	respJSON := JobJSONFromResponse(resp)
+	defer resp.Body.Close()
+	respJSON := JobJSONFromResponse(resp.Body)
 
 	expectedResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
 	gock.New("https://www.bitstamp.net").
@@ -111,12 +111,12 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 
 func TestCreateInvalidTasks(t *testing.T) {
+	t.Parallel()
 	//fixtureprepare.SetUpDB()
 	//defer fixtureprepare.TearDownDB()
 	store := Store()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
 	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -132,10 +132,10 @@ func TestCreateInvalidTasks(t *testing.T) {
 }
 
 func TestCreateInvalidCron(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
 	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -151,10 +151,10 @@ func TestCreateInvalidCron(t *testing.T) {
 }
 
 func TestShowJobs(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "1 * * * *"}
@@ -173,10 +173,10 @@ func TestShowJobs(t *testing.T) {
 }
 
 func TestShowNotFoundJobs(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
-	server := SetUpWeb(store)
-	defer TearDownWeb()
+	server := store.SetUpWeb()
 	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 404, resp.StatusCode, "Response should be not found")

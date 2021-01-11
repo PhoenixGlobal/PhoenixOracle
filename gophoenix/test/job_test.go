@@ -7,6 +7,7 @@ import (
 )
 
 func TestSave(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
 	j1 := models.NewJob()
@@ -20,6 +21,7 @@ func TestSave(t *testing.T) {
 }
 
 func TestJobNewRun(t *testing.T) {
+	t.Parallel()
 	store := Store()
 	defer store.Close()
 
