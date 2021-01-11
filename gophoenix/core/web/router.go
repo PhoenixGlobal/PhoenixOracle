@@ -14,7 +14,9 @@ import (
 
 func Router(store *services.Store) *gin.Engine {
 	r := gin.New()
-	r.Use(handlerFunc(logger.LoggerWriter()), gin.Recovery())
+	config := store.Config
+	basicAuth := gin.BasicAuth(gin.Accounts{config.BasicAuthUsername: config.BasicAuthPassword})
+	r.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
 	t := controllers.JobsController{store}
 	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
@@ -24,7 +26,7 @@ func Router(store *services.Store) *gin.Engine {
 	return r
 }
 
-func handlerFunc(logger *logger.Logger) gin.HandlerFunc {
+func loggerFunc(logger *logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		buf, _ := ioutil.ReadAll(c.Request.Body)
 		rdr := bytes.NewBuffer(buf)

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"golang.org/x/crypto/ssh/terminal"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func Authenticate(store *Store) {
@@ -50,14 +52,36 @@ func createAccount(store *Store) {
 	}
 }
 
-func promptPassword(prompt string) string {
-	fmt.Print(prompt)
-	bytePwd, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+func withTerminalResetter(f func()) {
+	initialTermState, err := terminal.GetState(int(syscall.Stdin))
 	if err != nil {
 		logger.Fatal(err)
 	}
-	fmt.Println()
-	return string(bytePwd)
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, os.Kill)
+	go func() {
+		<-c
+		_ = terminal.Restore(int(syscall.Stdin), initialTermState)
+		os.Exit(1)
+	}()
+
+	f()
+	signal.Stop(c)
+}
+
+func promptPassword(prompt string) string {
+	var rval string
+	withTerminalResetter(func() {
+		fmt.Print(prompt)
+		bytePwd, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			logger.Fatal(err)
+		}
+		fmt.Println()
+		rval = string(bytePwd)
+	})
+	return rval
 }
 
 func printGreeting() {

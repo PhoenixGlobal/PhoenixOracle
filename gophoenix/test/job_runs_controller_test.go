@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	"net/http"
 	"testing"
 )
 
@@ -32,7 +31,7 @@ func TestJobRunsIndex(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, err2)
 
-	resp, err := http.Get(server.URL + "/jobs/" + j.ID + "/runs")
+	resp, err := BasicAuthGet(server.URL + "/jobs/" + j.ID + "/runs")
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode, "Response should be successful")
 

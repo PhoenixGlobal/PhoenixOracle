@@ -23,7 +23,7 @@ func TestCreateTasks(t *testing.T) {
 	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
-	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
@@ -74,7 +74,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_hello_world_job.json")
-	resp, _ := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	defer resp.Body.Close()
 	respJSON := JobJSONFromResponse(resp.Body)
 
@@ -119,7 +119,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
-	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func TestCreateInvalidCron(t *testing.T) {
 	server := store.SetUpWeb()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
-	resp, err := http.Post(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -161,7 +161,7 @@ func TestShowJobs(t *testing.T) {
 
 	store.Save(&j)
 
-	resp, err := http.Get(server.URL + "/jobs/" + j.ID)
+	resp, err := BasicAuthGet(server.URL + "/jobs/" + j.ID)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode, "Response should be successful")
 	b, err := ioutil.ReadAll(resp.Body)
@@ -177,9 +177,19 @@ func TestShowNotFoundJobs(t *testing.T) {
 	store := Store()
 	defer store.Close()
 	server := store.SetUpWeb()
-	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
+	resp, err := BasicAuthGet(server.URL + "/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 404, resp.StatusCode, "Response should be not found")
 }
 
+func TestShowJobUnauthenticated(t *testing.T) {
+	t.Parallel()
+	store := Store()
+	server := store.SetUpWeb()
+	defer store.Close()
+
+	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
+	assert.Nil(t, err)
+	assert.Equal(t, 401, resp.StatusCode, "Response should be forbidden")
+}
 

@@ -13,6 +13,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path"
@@ -24,6 +25,8 @@ type TestStore struct {
 	Server *httptest.Server
 }
 const testRootDir = "./tmp/test"
+const testUsername = "testusername"
+const testPassword = "testpassword"
 
 func init() {
 	dir, err := homedir.Expand(testRootDir)
@@ -53,7 +56,7 @@ func JobJSONFromResponse(body io.Reader) JobJSON {
 	return respJSON
 }
 func Store() *TestStore {
-	config := services.NewConfig(path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())))
+	config := services.NewConfig(path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),testUsername,testPassword)
 	logger.SetLoggerDir(config.RootDir)
 	store := services.NewStore(config)
 	return &TestStore{
@@ -92,3 +95,19 @@ func TimeParse(s string) time.Time {
 	return t
 }
 
+func BasicAuthPost(url string, contentType string, body io.Reader) (*http.Response, error) {
+	client := &http.Client{}
+	request, _ := http.NewRequest("POST", url, body)
+	request.Header.Set("Content-Type", contentType)
+	request.SetBasicAuth(testUsername, testPassword)
+	resp, err := client.Do(request)
+	return resp, err
+}
+
+func BasicAuthGet(url string) (*http.Response, error) {
+	client := &http.Client{}
+	request, _ := http.NewRequest("GET", url, nil)
+	request.SetBasicAuth(testUsername, testPassword)
+	resp, err := client.Do(request)
+	return resp, err
+}
