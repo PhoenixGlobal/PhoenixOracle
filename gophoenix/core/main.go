@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	config := services.NewConfig("~/.phoenix","phoenix","p@ssword")
+	config := services.NewConfig()
 	logger.SetLoggerDir(config.RootDir)
 	store := services.NewStore(config)
 	sugarLogger := logger.GetLogger()

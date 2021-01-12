@@ -1,28 +1,31 @@
 package services
 
 import (
+	"github.com/caarlos0/env"
+	homedir "github.com/mitchellh/go-homedir"
 	"log"
 	"os"
 	"path"
-
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 type Config struct {
-	RootDir string
-	BasicAuthUsername string
-	BasicAuthPassword string
+	RootDir string               `env:"ROOT" envDefault:"~/.phoenix"`
+	BasicAuthUsername string	 `env:"USERNAME" envDefault:"phoenix"`
+	BasicAuthPassword string	 `env:"PASSWORD" envDefault:"p@ssword"`
 }
 
-func NewConfig(dir string, username string, password string) Config {
-	dir, err := homedir.Expand(dir)
+func NewConfig() Config {
+	config := Config{}
+	env.Parse(&config)
+	dir, err := homedir.Expand(config.RootDir)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err = os.MkdirAll(dir, os.FileMode(0700)); err != nil {
 		log.Fatal(err)
 	}
-	return Config{dir, username, password}
+	config.RootDir = dir
+	return config
 }
 
 func (self Config) KeysDir() string {

@@ -56,7 +56,12 @@ func JobJSONFromResponse(body io.Reader) JobJSON {
 	return respJSON
 }
 func Store() *TestStore {
-	config := services.NewConfig(path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),testUsername,testPassword)
+	config := services.Config{
+		path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),testUsername,testPassword,
+	}
+	if err := os.MkdirAll(config.RootDir, os.FileMode(0700)); err != nil {
+		log.Fatal(err)
+	}
 	logger.SetLoggerDir(config.RootDir)
 	store := services.NewStore(config)
 	return &TestStore{
