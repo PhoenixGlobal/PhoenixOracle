@@ -52,7 +52,7 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, bytes32.FunctionID, "12345679")
 
 	schedule := j.Schedule
-	assert.Equal(t, schedule.Cron, models.Cron("* 7 * * *"))
+	assert.Equal(t, schedule.Cron, models.Cron("* * * * *"))
 	assert.Equal(t, (*models.Time)(nil), schedule.StartAt, "Wrong start at saved")
 	endAt := models.Time{TimeParse("2020-12-17T14:05:29Z")}
 	assert.Equal(t, endAt, *schedule.EndAt, "Wrong end at saved")
@@ -68,21 +68,24 @@ func TestCreateJobsIntegration(t *testing.T) {
 	//RegisterTestingT(t)
 	defer gock.Off()
 
+	defer gock.DisableNetworking()
+	gock.EnableNetworking()
+
 	store := Store()
 	store.Start()
 	defer store.Close()
 	server := store.SetUpWeb()
-
-	jsonStr := LoadJSON("./fixture/create_hello_world_job.json")
-	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
-	defer resp.Body.Close()
-	respJSON := JobJSONFromResponse(resp.Body)
 
 	expectedResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
 	gock.New("https://www.bitstamp.net").
 		Get("/api/ticker").
 		Reply(200).
 		JSON(expectedResponse)
+
+	jsonStr := LoadJSON("./fixtures/create_jobs.json")
+	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	defer resp.Body.Close()
+	respJSON := JobJSONFromResponse(resp.Body)
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
