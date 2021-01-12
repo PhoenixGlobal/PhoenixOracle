@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
 	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/h2non/gock.v1"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +19,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"testing"
 	"time"
 )
 
@@ -82,6 +85,12 @@ func (self *TestStore)Close()() {
 		gin.SetMode(gin.DebugMode)
 		self.Server.Close()
 	}
+}
+
+func CloseGock(t *testing.T) {
+	assert.True(t, gock.IsDone(), "Not all gock requests were fulfilled")
+	gock.DisableNetworking()
+	gock.Off()
 }
 
 func LoadJSON(file string) []byte {

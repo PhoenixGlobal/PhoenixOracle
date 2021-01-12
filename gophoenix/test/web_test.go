@@ -66,26 +66,33 @@ func TestCreateJobsIntegration(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
 	//RegisterTestingT(t)
-	defer gock.Off()
-
-	defer gock.DisableNetworking()
+	defer CloseGock(t)
 	gock.EnableNetworking()
 
 	store := Store()
-	store.Start()
+	//store.Start()
 	defer store.Close()
 	server := store.SetUpWeb()
 
-	expectedResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
+	tickerResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
 	gock.New("https://www.bitstamp.net").
-		Get("/api/ticker").
+		Get("/api/ticker/").
 		Reply(200).
-		JSON(expectedResponse)
+		JSON(tickerResponse)
+
+	ethResponse := `{"result": "0x0100"}`
+	gock.New("http://example.com").
+		Post("/api").
+		Reply(200).
+		JSON(ethResponse)
 
 	jsonStr := LoadJSON("./fixtures/create_jobs.json")
-	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	assert.Nil(t, err)
 	defer resp.Body.Close()
 	respJSON := JobJSONFromResponse(resp.Body)
+
+	store.Start()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
@@ -95,7 +102,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 	store.Scheduler.Stop()
 	var job models.Job
-	err := store.One("ID", respJSON.ID, &job)
+	err = store.One("ID", respJSON.ID, &job)
 	assert.Nil(t, err)
 	assert.Equal(t, "HttpGet",job.Tasks[0].Type)
 
@@ -107,9 +114,10 @@ func TestCreateJobsIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
 
-	assert.Equal(t, expectedResponse, jobRun.TaskRuns[0].Result.Value())
+	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
 	jobRun = jobRuns[0]
 	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
+	assert.Equal(t, "0x0100", jobRun.Result.Value())
 }
 
 
