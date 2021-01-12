@@ -1,6 +1,10 @@
 package services
 
 import (
+	"PhoenixOracle/gophoenix/core/logger"
+	"os"
+	"os/signal"
+	"syscall"
 	"PhoenixOracle/gophoenix/core/models"
 	"fmt"
 )
@@ -10,6 +14,7 @@ type Store struct {
 	Scheduler *Scheduler
 	Config    Config
 	KeyStore  *KeyStore
+	sigs      chan os.Signal
 }
 
 func NewStore(config Config) *Store {
@@ -23,10 +28,18 @@ func NewStore(config Config) *Store {
 }
 
 func (self *Store) Start() error {
+	self.sigs = make(chan os.Signal, 1)
+	signal.Notify(self.sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-self.sigs
+		self.Close()
+		os.Exit(1)
+	}()
 	return self.Scheduler.Start()
 }
 
 func (self *Store) Close() {
+	logger.Info("Gracefully exiting...")
 	self.Scheduler.Stop()
 	self.ORM.Close()
 }
