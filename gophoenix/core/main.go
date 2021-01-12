@@ -1,6 +1,7 @@
 package main
 
 import (
+	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/web"
@@ -8,7 +9,7 @@ import (
 )
 
 func main() {
-	config := services.NewConfig()
+	config := configlib.New()
 	logger.SetLoggerDir(config.RootDir)
 	store := services.NewStore(config)
 	sugarLogger := logger.GetLogger()

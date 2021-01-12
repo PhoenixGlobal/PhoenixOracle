@@ -1,7 +1,6 @@
 package models
 
 import (
-	"PhoenixOracle/gophoenix/core/adapters"
 	"time"
 )
 
@@ -10,7 +9,7 @@ type JobRun struct {
 	JobID     string    `storm:"index"`
 	Status    string
 	CreatedAt time.Time `storm:"index"`
-	Result    adapters.RunResult `storm:"inline"`
+	Result    RunResult `storm:"inline"`
 	TaskRuns  []TaskRun          `storm:"inline"`
 }
 

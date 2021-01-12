@@ -36,17 +36,17 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
-	adapter1,_ := j.Tasks[0].Adapter()
+	adapter1,_ := adapters.For(j.Tasks[0])
 	httpGet := adapter1.(*adapters.HttpGet)
 	assert.Nil(t, err)
 	assert.Equal(t, httpGet.Endpoint, "https://bitstamp.net/api/ticker/")
 
 
-	adapter2,_ := j.Tasks[1].Adapter()
+	adapter2,_ := adapters.For(j.Tasks[1])
 	jsonParse := adapter2.(*adapters.JsonParse)
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
-	adapter3,_ := j.Tasks[3].Adapter()
+	adapter3,_ := adapters.For(j.Tasks[3])
 	bytes32 := adapter3.(*adapters.EthSendTx)
 	assert.Equal(t, bytes32.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, bytes32.FunctionID, "12345679")

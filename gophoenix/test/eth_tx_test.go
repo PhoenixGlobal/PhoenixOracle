@@ -2,6 +2,7 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
+	"PhoenixOracle/gophoenix/core/models"
 	"github.com/stretchr/testify/assert"
 	gock "gopkg.in/h2non/gock.v1"
 	"testing"
@@ -13,7 +14,7 @@ func TestSendingEthereumTx(t *testing.T) {
 	address := "0x1234567890"
 	fid := "0x12345678"
 	value := "0000abcdef"
-	input := adapters.RunResultWithValue(value)
+	input := models.RunResultWithValue(value)
 
 	response := `{"result": "0x0100"}`
 	gock.New("http://example.com").

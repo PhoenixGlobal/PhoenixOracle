@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"PhoenixOracle/gophoenix/core/models"
 	"errors"
 	simplejson "github.com/bitly/go-simplejson"
 )
@@ -9,22 +10,22 @@ type JsonParse struct {
 	Path []string `json:"path"`
 }
 
-func (self *JsonParse) Perform(input RunResult) RunResult {
+func (self *JsonParse) Perform(input models.RunResult) models.RunResult {
 	js, err := simplejson.NewJson([]byte(input.Value()))
 	if err != nil {
-		return RunResult{Error: err}
+		return models.RunResult{Error: err}
 	}
 
 	js, err = checkEarlyPath(js, self.Path)
 	if err != nil {
-		return RunResult{Error: err}
+		return models.RunResult{Error: err}
 	}
 
 	rval, ok := js.CheckGet(self.Path[len(self.Path)-1])
 	if !ok {
-		return RunResult{}
+		return models.RunResult{}
 	}
-	return RunResultWithValue(rval.MustString())
+	return models.RunResultWithValue(rval.MustString())
 }
 
 func checkEarlyPath(js *simplejson.Json, path []string) (*simplejson.Json, error) {

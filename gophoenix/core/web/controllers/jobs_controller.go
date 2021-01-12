@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
 	"github.com/asdine/storm"
@@ -14,6 +15,10 @@ type JobsController struct{
 func (tc *JobsController) Create(c *gin.Context) {
 	j := models.NewJob()
 	if err := c.ShouldBindJSON(&j); err != nil {
+		c.JSON(500, gin.H{
+			"errors": []string{err.Error()},
+		})
+	} else if err = adapters.Validate(j); err != nil {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})

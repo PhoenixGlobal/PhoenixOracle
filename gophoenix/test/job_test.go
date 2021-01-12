@@ -1,6 +1,7 @@
 package test
 
 import (
+	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -34,7 +35,7 @@ func TestJobNewRun(t *testing.T) {
 	assert.Equal(t, 1, len(newRun.TaskRuns))
 	assert.Equal(t, "NoOp", job.Tasks[0].Type)
 	assert.Nil(t, job.Tasks[0].Params)
-	adapter, _ := job.Tasks[0].Adapter()
+	adapter, _ := adapters.For(job.Tasks[0])
 	assert.NotNil(t, adapter)
 
 }

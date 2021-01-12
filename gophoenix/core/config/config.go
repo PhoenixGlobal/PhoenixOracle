@@ -1,4 +1,4 @@
-package services
+package config
 
 import (
 	"github.com/caarlos0/env"
@@ -14,7 +14,7 @@ type Config struct {
 	BasicAuthPassword string	 `env:"PASSWORD" envDefault:"p@ssword"`
 }
 
-func NewConfig() Config {
+func New() Config {
 	config := Config{}
 	env.Parse(&config)
 	dir, err := homedir.Expand(config.RootDir)

@@ -1,6 +1,7 @@
 package services
 
 import (
+	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
 	"fmt"
@@ -12,13 +13,13 @@ import (
 type Store struct {
 	*models.ORM
 	Scheduler *Scheduler
-	Config    Config
+	Config    configlib.Config
 	KeyStore  *KeyStore
 	sigs      chan os.Signal
 	Exiter    func(int)
 }
 
-func NewStore(config Config) *Store {
+func NewStore(config configlib.Config) *Store {
 	orm := models.NewORM(config.RootDir)
 	return &Store{
 		ORM:       orm,
@@ -47,11 +48,7 @@ func (self *Store) Close() {
 }
 
 func (self *Store) AddJob(job models.Job) error {
-	err := job.Validate();
-	if err != nil{
-		return err
-	}
-	err = self.Save(&job)
+	err := self.Save(&job)
 	if err != nil {
 		return err
 	}
