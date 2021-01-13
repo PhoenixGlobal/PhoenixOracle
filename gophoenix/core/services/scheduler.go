@@ -1,6 +1,7 @@
 package services
 
 import (
+	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
 	"errors"
@@ -11,6 +12,7 @@ import (
 type Scheduler struct {
 	cron *cronlib.Cron
 	orm  *models.ORM
+	config  configlib.Config
 	started bool
 }
 
@@ -44,7 +46,7 @@ func (self *Scheduler) AddJob(job models.Job) {
 	}
 	cronStr := string(job.Schedule.Cron)
 	self.cron.AddFunc(cronStr, func() {
-		err := StartJob(job.NewRun(), self.orm)
+		err := StartJob(job.NewRun(), self.orm, self.config)
 		if err != nil{
 			logger.GetLogger().Panic(err.Error())
 		}

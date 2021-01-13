@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/models"
 	"encoding/json"
 	"fmt"
@@ -13,7 +14,7 @@ type Adapter interface {
 
 type Output map[string]null.String
 
-func For(task models.Task) (Adapter, error) {
+func For(task models.Task,cf config.Config) (Adapter, error) {
 	switch task.Type {
 	case "HttpGet":
 		temp := &HttpGet{}
@@ -30,6 +31,7 @@ func For(task models.Task) (Adapter, error) {
 	case "EthSendTx":
 		temp := &EthSendTx{}
 		err := json.Unmarshal(task.Params, temp)
+		temp.Config = cf
 		return temp, err
 	case "NoOp":
 		return &NoOp{}, nil
@@ -58,7 +60,7 @@ func Validate(job models.Job) error {
 }
 
 func validateTask(task models.Task) error {
-	_, err := For(task)
+	_, err := For(task, config.Config{})
 	return err
 }
 

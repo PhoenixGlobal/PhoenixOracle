@@ -1,11 +1,13 @@
 package adapters
 
 import (
+	"PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/models"
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
 type EthSendTx struct {
+	Config     config.Config
 	Address    string `json:"address"`
 	FunctionID string `json:"functionID"`
 }

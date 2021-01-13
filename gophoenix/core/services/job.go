@@ -2,12 +2,13 @@ package services
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
+	"PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
 	"fmt"
 )
 
-func StartJob(run models.JobRun, orm *models.ORM) error {
+func StartJob(run models.JobRun, orm *models.ORM, cf config.Config) error {
 	run.Status = "in progress"
 	err := orm.Save(&run)
 	if err != nil {
@@ -17,7 +18,7 @@ func StartJob(run models.JobRun, orm *models.ORM) error {
 	logger.GetLogger().Infow("starting job", run.ForLogger()...)
 	var prevRun models.TaskRun
 	for i, taskRun := range run.TaskRuns {
-		prevRun = startTask(taskRun, prevRun.Result)
+		prevRun = startTask(taskRun, prevRun.Result, cf)
 		run.TaskRuns[i] = prevRun
 
 		err1 := orm.Save(&run)
@@ -40,9 +41,9 @@ func StartJob(run models.JobRun, orm *models.ORM) error {
 	return runJobError(run, orm.Save(&run))
 }
 
-func startTask(run models.TaskRun, input models.RunResult) models.TaskRun {
+func startTask(run models.TaskRun, input models.RunResult,cf config.Config) models.TaskRun {
 	run.Status = "in progress"
-	adapter, err := adapters.For(run.Task)
+	adapter, err := adapters.For(run.Task,cf)
 
 	if err != nil {
 		run.Status = "errored"
