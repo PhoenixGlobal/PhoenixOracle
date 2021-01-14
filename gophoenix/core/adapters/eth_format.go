@@ -6,6 +6,7 @@ import (
 )
 
 type EthBytes32 struct {
+	AdapterBase
 }
 
 const maxBytes32HexLength = 32 * 2

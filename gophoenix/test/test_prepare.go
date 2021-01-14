@@ -1,7 +1,7 @@
 package test
 
 import (
-	config2 "PhoenixOracle/gophoenix/core/config"
+	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/web"
@@ -60,9 +60,7 @@ func JobJSONFromResponse(body io.Reader) JobJSON {
 	return respJSON
 }
 func Store() *TestStore {
-	config := config2.Config{
-		path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),testUsername,testPassword,
-	}
+	config := NewConfig()
 	if err := os.MkdirAll(config.RootDir, os.FileMode(0700)); err != nil {
 		log.Fatal(err)
 	}
@@ -70,6 +68,15 @@ func Store() *TestStore {
 	store := services.NewStore(config)
 	return &TestStore{
 		Store: store,
+	}
+}
+
+func NewConfig() configlib.Config {
+	return configlib.Config{
+		RootDir:           path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),
+		BasicAuthUsername: testUsername,
+		BasicAuthPassword: testPassword,
+		EthereumURL:       "https://ethereum.example.com/api",
 	}
 }
 

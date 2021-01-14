@@ -8,6 +8,7 @@ import (
 )
 
 type HttpGet struct {
+	AdapterBase
 	Endpoint string `json:"endpoint"`
 }
 

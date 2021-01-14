@@ -7,6 +7,7 @@ import (
 )
 
 type JsonParse struct {
+	AdapterBase
 	Path []string `json:"path"`
 }
 

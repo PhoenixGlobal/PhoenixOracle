@@ -12,6 +12,7 @@ type Config struct {
 	RootDir string               `env:"ROOT" envDefault:"~/.phoenix"`
 	BasicAuthUsername string	 `env:"USERNAME" envDefault:"phoenix"`
 	BasicAuthPassword string	 `env:"PASSWORD" envDefault:"p@ssword"`
+	EthereumURL       string `env:"ETHEREUM_URL" envDefault:"http://localhost:8545"`
 }
 
 func New() Config {
