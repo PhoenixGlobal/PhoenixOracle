@@ -19,22 +19,16 @@ func (self HttpGet) Perform(input models.RunResult) models.RunResult{
 	fmt.Println(self.Endpoint)
 	fmt.Println("***********************")
 	if err != nil{
-		return models.RunResult{
-			Error: err,
-		}
+		return models.RunResultWithError(err)
 	}
 	defer response.Body.Close()
 	bytes, err:= ioutil.ReadAll(response.Body)
 	body := string(bytes)
 	if err != nil{
-		return models.RunResult{
-			Error: err,
-		}
+		return models.RunResultWithError(err)
 	}
 	if response.StatusCode >= 300{
-		return models.RunResult{
-			Error: fmt.Errorf(body),
-		}
+		return models.RunResultWithError(fmt.Errorf(body))
 	}
 	fmt.Println("!!!!!!!!!!!!!!!!!!!")
 	rs :=  models.RunResultWithValue(body)

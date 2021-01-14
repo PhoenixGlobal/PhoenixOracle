@@ -76,7 +76,7 @@ func NewConfig() configlib.Config {
 		RootDir:           path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),
 		BasicAuthUsername: testUsername,
 		BasicAuthPassword: testPassword,
-		EthereumURL:       "https://ethereum.example.com/api",
+		EthereumURL:       "https://example.com/api",
 	}
 }
 

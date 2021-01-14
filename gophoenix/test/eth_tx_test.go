@@ -19,7 +19,7 @@ func TestSendingEthereumTx(t *testing.T) {
 
 	response := `{"result": "0x0100"}`
 	gock.New(config.EthereumURL).
-		Post("/api").
+		Post("").
 		Reply(200).
 		JSON(response)
 
