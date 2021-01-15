@@ -11,7 +11,7 @@ import (
 func TestLoadingSavedSchedules(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	j := models.NewJob()
@@ -23,7 +23,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	assert.Equal(t,nil , e)
 	assert.Equal(t, 1, len(jobs))
 
-	sched := services.NewScheduler(store.ORM,store.Config)
+	sched := services.NewScheduler(store)
 	_ = sched.Start()
 
 
@@ -38,13 +38,13 @@ func TestLoadingSavedSchedules(t *testing.T) {
 
 func TestSchedulesWithEmptyCron(t *testing.T) {
 	RegisterTestingT(t)
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	j := models.NewJob()
 	_ = store.Save(&j)
 
-	sched := services.NewScheduler(store.ORM,store.Config)
+	sched := services.NewScheduler(store)
 	_ = sched.Start()
 	defer sched.Stop()
 
@@ -58,10 +58,10 @@ func TestSchedulesWithEmptyCron(t *testing.T) {
 func TestAddJob(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
-	sched := services.NewScheduler(store.ORM,store.Config)
+	sched := services.NewScheduler(store)
 	sched.Start()
 	defer sched.Stop()
 
@@ -80,10 +80,10 @@ func TestAddJob(t *testing.T) {
 func TestAddJobWhenStopped(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
-	sched := services.NewScheduler(store.ORM,store.Config)
+	sched := services.NewScheduler(store)
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "* * * * *"}

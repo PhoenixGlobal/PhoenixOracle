@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/guregu/null.v3"
@@ -13,22 +13,22 @@ type Adapter interface {
 }
 
 type AdapterBase struct {
-	Config config.Config
+	Store *store.Store
 }
 
 type Output map[string]null.String
 
-type configSetter interface {
-	setConfig(config.Config)
+type storeSetter interface {
+	setStore(*store.Store)
 }
 
-type adapterConfigSetter interface {
+type adapterStoreSetter interface {
 	Adapter
-	configSetter
+	storeSetter
 }
 
-func For(task models.Task,cf config.Config) (Adapter, error) {
-	var ac adapterConfigSetter
+func For(task models.Task,s *store.Store) (Adapter, error) {
+	var ac adapterStoreSetter
 	var err error
 	switch task.Type {
 	case "HttpGet":
@@ -52,7 +52,7 @@ func For(task models.Task,cf config.Config) (Adapter, error) {
 	default:
 		return nil, fmt.Errorf("%s is not a supported adapter type", task.Type)
 	}
-	ac.setConfig(cf)
+	ac.setStore(s)
 	return ac, err
 
 }
@@ -77,11 +77,11 @@ func Validate(job models.Job) error {
 }
 
 func validateTask(task models.Task) error {
-	_, err := For(task, config.Config{})
+	_, err := For(task, nil)
 	return err
 }
 
-func (self AdapterBase) setConfig(cf config.Config) {
-	self.Config = cf
+func (self AdapterBase) setStore(s *store.Store) {
+	self.Store = s
 }
 

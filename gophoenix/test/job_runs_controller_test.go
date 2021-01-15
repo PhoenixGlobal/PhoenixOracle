@@ -18,16 +18,16 @@ type JobRun struct {
 
 func TestJobRunsIndex(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	defer store.Close()
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "schedule test"}
-	err := store.Save(&j)
+	err := app.Store.Save(&j)
 	assert.Nil(t, err)
 	jr := j.NewRun()
-	err2 := store.Save(&jr)
+	err2 := app.Store.Save(&jr)
 	assert.Nil(t, err)
 	assert.Nil(t, err2)
 

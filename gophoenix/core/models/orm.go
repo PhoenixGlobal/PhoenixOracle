@@ -41,6 +41,11 @@ func (self *ORM) Where(field string, value interface{}, instance interface{}) er
 	}
 	return err
 }
+func (self *ORM) JobRunsFor(job Job) ([]JobRun, error) {
+	var runs []JobRun
+	err := self.Where("JobID", job.ID, &runs)
+	return runs, err
+}
 
 func emptySlice(to interface{}) {
 	ref := reflect.ValueOf(to)

@@ -8,7 +8,7 @@ import (
 )
 
 func TestRetrievingJobRunsWithErrorsFromDB(t *testing.T) {
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	job := models.NewJob()

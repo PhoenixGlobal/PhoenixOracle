@@ -9,7 +9,7 @@ import (
 
 func TestSave(t *testing.T) {
 	t.Parallel()
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 	j1 := models.NewJob()
 	j1.Schedule = models.Schedule{Cron: "1 * * * *"}
@@ -23,7 +23,7 @@ func TestSave(t *testing.T) {
 
 func TestJobNewRun(t *testing.T) {
 	t.Parallel()
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	job := models.NewJob()
@@ -35,7 +35,7 @@ func TestJobNewRun(t *testing.T) {
 	assert.Equal(t, 1, len(newRun.TaskRuns))
 	assert.Equal(t, "NoOp", job.Tasks[0].Type)
 	assert.Nil(t, job.Tasks[0].Params)
-	adapter, _ := adapters.For(job.Tasks[0], store.Config)
+	adapter, _ := adapters.For(job.Tasks[0], store)
 	assert.NotNil(t, adapter)
 
 }

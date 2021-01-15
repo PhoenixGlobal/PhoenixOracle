@@ -11,7 +11,7 @@ import (
 func TestGracefulShutdown(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	var completed bool

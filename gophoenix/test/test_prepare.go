@@ -1,9 +1,9 @@
 package test
 
 import (
-	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/services"
+	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/web"
 	"encoding/json"
 	"fmt"
@@ -25,7 +25,7 @@ import (
 )
 
 type TestStore struct {
-	*services.Store
+	*store.Store
 	Server *httptest.Server
 }
 const testRootDir = "./tmp/test"
@@ -64,19 +64,19 @@ func Store() *TestStore {
 
 }
 
-func StoreWithConfig(config configlib.Config)  *TestStore{
+func StoreWithConfig(config store.Config)  *TestStore{
 	if err := os.MkdirAll(config.RootDir, os.FileMode(0700)); err != nil {
 		log.Fatal(err)
 	}
 	logger.SetLoggerDir(config.RootDir)
-	store := services.NewStore(config)
+	store := store.NewStore(config)
 	return &TestStore{
 		Store: store,
 	}
 }
 
-func NewConfig() configlib.Config {
-	return configlib.Config{
+func NewConfig() store.Config {
+	return store.Config{
 		RootDir:           path.Join(testRootDir, fmt.Sprintf("%d", time.Now().UnixNano())),
 		BasicAuthUsername: testUsername,
 		BasicAuthPassword: testPassword,
@@ -84,20 +84,46 @@ func NewConfig() configlib.Config {
 	}
 }
 
-func (self *TestStore)SetUpWeb() *httptest.Server {
+type TestApplication struct {
+	*services.Application
+	Server *httptest.Server
+}
+
+func NewApplication() *TestApplication {
+	return NewApplicationWithConfig(NewConfig())
+}
+
+func NewApplicationWithConfig(config store.Config) *TestApplication {
+	return  &TestApplication{Application: services.NewApplication(config)}
+}
+
+func (self *TestApplication)NewServer() *httptest.Server {
 	gin.SetMode(gin.TestMode)
-	server := httptest.NewServer(web.Router(self.Store))
+	server := httptest.NewServer(web.Router(self.Application))
 	self.Server = server
 	return server
 }
 
-func (self *TestStore)Close()() {
-	self.Store.Close()
+func (self *TestApplication)Stop()() {
+	self.Application.Stop()
+	CleanUpStore(self.Store)
 	if self.Server != nil {
 		gin.SetMode(gin.DebugMode)
 		self.Server.Close()
 	}
 }
+
+func NewStore() *store.Store {
+	return store.NewStore(NewConfig())
+}
+
+func CleanUpStore(store *store.Store) {
+	store.Close()
+	if err := os.RemoveAll(store.Config.RootDir); err != nil {
+		log.Println(err)
+	}
+}
+
 
 func CloseGock(t *testing.T) {
 	assert.True(t, gock.IsDone(), "Not all gock requests were fulfilled")
@@ -132,7 +158,7 @@ func CopyFile(src, dst string) {
 	}
 }
 
-func AddPrivateKey(config configlib.Config, src string) {
+func AddPrivateKey(config store.Config, src string) {
 	err := os.MkdirAll(config.KeysDir(), os.FileMode(0700))
 	if err != nil {
 		log.Fatal(err)

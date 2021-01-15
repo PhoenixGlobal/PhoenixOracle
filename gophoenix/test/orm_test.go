@@ -8,7 +8,7 @@ import (
 
 func TestWhereNotFound(t *testing.T) {
 	t.Parallel()
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	j1 := models.NewJob()
@@ -21,7 +21,7 @@ func TestWhereNotFound(t *testing.T) {
 
 func TestAllIndexedNotFound(t *testing.T) {
 	t.Parallel()
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	j1 := models.NewJob()
@@ -34,7 +34,7 @@ func TestAllIndexedNotFound(t *testing.T) {
 
 func TestAllNotFound(t *testing.T) {
 	t.Parallel()
-	store := Store()
+	store := NewStore()
 	defer store.Close()
 
 	var jobs []models.Job

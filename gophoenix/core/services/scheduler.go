@@ -1,24 +1,23 @@
 package services
 
 import (
-	configlib "PhoenixOracle/gophoenix/core/config"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store"
 	"errors"
 	"fmt"
 	cronlib "github.com/mrwonko/cron"
 )
 
 type Scheduler struct {
-	cron *cronlib.Cron
-	orm  *models.ORM
-	config  configlib.Config
+	cron    *cronlib.Cron
+	store   *store.Store
 	started bool
 }
 
 
-func NewScheduler(orm *models.ORM, cf configlib.Config) *Scheduler {
-	return &Scheduler{orm: orm,config: cf}
+func NewScheduler(store *store.Store) *Scheduler {
+	return &Scheduler{store: store}
 }
 
 func (self *Scheduler) Start() error {
@@ -27,7 +26,7 @@ func (self *Scheduler) Start() error {
 	}
 	self.started = true
 	self.cron = cronlib.New()
-	jobs,err := self.orm.JobsWithCron()
+	jobs,err := self.store.JobsWithCron()
 	if err != nil {
 		return fmt.Errorf("Scheduler: ", err)
 	}
@@ -46,7 +45,7 @@ func (self *Scheduler) AddJob(job models.Job) {
 	}
 	cronStr := string(job.Schedule.Cron)
 	self.cron.AddFunc(cronStr, func() {
-		err := StartJob(job.NewRun(), self.orm, self.config)
+		err := StartJob(job.NewRun(), self.store)
 		if err != nil{
 			logger.GetLogger().Panic(err.Error())
 		}

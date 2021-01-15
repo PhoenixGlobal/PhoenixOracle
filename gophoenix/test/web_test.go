@@ -17,10 +17,9 @@ import (
 
 func TestCreateTasks(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	defer store.Close()
-
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -32,21 +31,21 @@ func TestCreateTasks(t *testing.T) {
 	defer resp.Body.Close()
 	respJSON := JobJSONFromResponse(resp.Body)
 	var j models.Job
-	store.One("ID", respJSON.ID, &j)
+	app.Store.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
 	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
-	adapter1,_ := adapters.For(j.Tasks[0],store.Config)
+	adapter1,_ := adapters.For(j.Tasks[0],app.Store)
 	httpGet := adapter1.(*adapters.HttpGet)
 	assert.Nil(t, err)
 	assert.Equal(t, httpGet.Endpoint, "https://bitstamp.net/api/ticker/")
 
 
-	adapter2,_ := adapters.For(j.Tasks[1],store.Config)
+	adapter2,_ := adapters.For(j.Tasks[1],app.Store)
 	jsonParse := adapter2.(*adapters.JsonParse)
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
-	adapter3,_ := adapters.For(j.Tasks[3],store.Config)
+	adapter3,_ := adapters.For(j.Tasks[3],app.Store)
 	signTx := adapter3.(*adapters.EthSignTx)
 	assert.Equal(t, signTx.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, signTx.FunctionID, "12345679")
@@ -65,14 +64,16 @@ func TestCreateTasks(t *testing.T) {
 func TestCreateJobsIntegration(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
+
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 	//RegisterTestingT(t)
 	defer CloseGock(t)
 	gock.EnableNetworking()
 
 	store := Store()
 	//store.Start()
-	defer store.Close()
-	server := store.SetUpWeb()
 
 	tickerResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
 	gock.New("https://www.bitstamp.net").
@@ -81,7 +82,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 		JSON(tickerResponse)
 
 	ethResponse := `{"result": "0x0100"}`
-	gock.New(store.Config.EthereumURL).
+	gock.New(app.Store.Config.EthereumURL).
 		Post("").
 		Reply(200).
 		JSON(ethResponse)
@@ -92,17 +93,17 @@ func TestCreateJobsIntegration(t *testing.T) {
 	defer resp.Body.Close()
 	respJSON := JobJSONFromResponse(resp.Body)
 
-	store.Start()
+	app.Start()
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = store.Where("JobID", respJSON.ID, &jobRuns)
+		_ = app.Store.Where("JobID", respJSON.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 
-	store.Scheduler.Stop()
+	app.Scheduler.Stop()
 	var job models.Job
-	err = store.One("ID", respJSON.ID, &job)
+	err = app.Store.One("ID", respJSON.ID, &job)
 	assert.Nil(t, err)
 	assert.Equal(t, "HttpGet",job.Tasks[0].Type)
 
@@ -125,9 +126,9 @@ func TestCreateInvalidTasks(t *testing.T) {
 	t.Parallel()
 	//fixtureprepare.SetUpDB()
 	//defer fixtureprepare.TearDownDB()
-	store := Store()
-	defer store.Close()
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -144,9 +145,9 @@ func TestCreateInvalidTasks(t *testing.T) {
 
 func TestCreateInvalidCron(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	defer store.Close()
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -163,14 +164,14 @@ func TestCreateInvalidCron(t *testing.T) {
 
 func TestShowJobs(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	defer store.Close()
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	j := models.NewJob()
 	j.Schedule = models.Schedule{Cron: "1 * * * *"}
 
-	store.Save(&j)
+	app.Store.Save(&j)
 
 	resp, err := BasicAuthGet(server.URL + "/jobs/" + j.ID)
 	assert.Nil(t, err)
@@ -185,9 +186,9 @@ func TestShowJobs(t *testing.T) {
 
 func TestShowNotFoundJobs(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	defer store.Close()
-	server := store.SetUpWeb()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 	resp, err := BasicAuthGet(server.URL + "/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 404, resp.StatusCode, "Response should be not found")
@@ -195,9 +196,9 @@ func TestShowNotFoundJobs(t *testing.T) {
 
 func TestShowJobUnauthenticated(t *testing.T) {
 	t.Parallel()
-	store := Store()
-	server := store.SetUpWeb()
-	defer store.Close()
+	app := NewApplication()
+	server := app.NewServer()
+	defer app.Stop()
 
 	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
 	assert.Nil(t, err)

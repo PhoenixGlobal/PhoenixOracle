@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
-func Router(store *services.Store) *gin.Engine {
+func Router(app *services.Application) *gin.Engine {
 	r := gin.New()
-	config := store.Config
+	config := app.Store.Config
 	basicAuth := gin.BasicAuth(gin.Accounts{config.BasicAuthUsername: config.BasicAuthPassword})
 	r.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
-	t := controllers.JobsController{store}
+	t := controllers.JobsController{app}
 	r.POST("/jobs", t.Create)
 	r.GET("/jobs/:id", t.Show)
 
-	jr := controllers.JobRunsController{store}
+	jr := controllers.JobRunsController{app}
 	r.GET("/jobs/:id/runs", jr.Index)
 	return r
 }

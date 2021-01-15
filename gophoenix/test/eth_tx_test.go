@@ -3,18 +3,20 @@ package test
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/models"
+	storelib "PhoenixOracle/gophoenix/core/store"
 	"github.com/stretchr/testify/assert"
 	gock "gopkg.in/h2non/gock.v1"
 	"testing"
 )
 
 func TestSendingEthereumTx(t *testing.T) {
+	store := NewStore()
+	defer store.Close()
 	defer CloseGock(t)
 
 	value := "0000abcdef"
 	input := models.RunResultWithValue(value)
-	config := NewConfig()
-
+	config := store.Config
 	response := `{"result": "0x0100"}`
 	gock.New(config.EthereumURL).
 		Post("").
@@ -22,7 +24,7 @@ func TestSendingEthereumTx(t *testing.T) {
 		JSON(response)
 
 	adapter := adapters.EthSendRawTx{
-		AdapterBase: adapters.AdapterBase{config},
+		AdapterBase: adapters.AdapterBase{store},
 	}
 
 	result := adapter.Perform(input)
@@ -34,8 +36,8 @@ func TestSigningEthereumTx(t *testing.T) {
 	AddPrivateKey(config, "./fixtures/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
 	password := "password"
 
-	store := StoreWithConfig(config)
-	defer store.Close()
+	store := storelib.NewStore(config)
+	defer CleanUpStore(store)
 
 	err := store.KeyStore.Unlock(password)
 	assert.Nil(t, err)
@@ -48,7 +50,7 @@ func TestSigningEthereumTx(t *testing.T) {
 	adapter := adapters.EthSignTx{
 		Address:     recipient,
 		FunctionID:  fid,
-		AdapterBase: adapters.AdapterBase{config},
+		AdapterBase: adapters.AdapterBase{store},
 	}
 	result := adapter.Perform(input)
 	assert.Contains(t, result.Value(), data)

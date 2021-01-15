@@ -2,6 +2,7 @@ package services
 
 import (
 	"PhoenixOracle/gophoenix/core/logger"
+	"PhoenixOracle/gophoenix/core/store"
 	"fmt"
 	"golang.org/x/crypto/ssh/terminal"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"syscall"
 )
 
-func Authenticate(store *Store) {
+func Authenticate(store *store.Store) {
 	if store.KeyStore.HasAccounts() {
 		checkPassword(store)
 	} else {
@@ -17,7 +18,7 @@ func Authenticate(store *Store) {
 	}
 }
 
-func checkPassword(store *Store) {
+func checkPassword(store *store.Store) {
 	for {
 		phrase := promptPassword("Enter Password:")
 		if err := store.KeyStore.Unlock(phrase); err != nil {
@@ -29,7 +30,7 @@ func checkPassword(store *Store) {
 	}
 }
 
-func createAccount(store *Store) {
+func createAccount(store *store.Store) {
 	for {
 		phrase := promptPassword("NewStore Password:")
 		phraseConfirmation := promptPassword("Confirm Password: ")
