@@ -47,9 +47,9 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
 	adapter3,_ := adapters.For(j.Tasks[3],store.Config)
-	bytes32 := adapter3.(*adapters.EthSendTx)
-	assert.Equal(t, bytes32.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
-	assert.Equal(t, bytes32.FunctionID, "12345679")
+	signTx := adapter3.(*adapters.EthSignTx)
+	assert.Equal(t, signTx.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
+	assert.Equal(t, signTx.FunctionID, "12345679")
 
 	schedule := j.Schedule
 	assert.Equal(t, schedule.Cron, models.Cron("* * * * *"))
