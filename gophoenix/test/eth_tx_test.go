@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	storelib "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
+	"PhoenixOracle/gophoenix/core/utils"
 	"github.com/stretchr/testify/assert"
 	gock "gopkg.in/h2non/gock.v1"
 	"testing"
@@ -34,6 +35,7 @@ func TestSendingEthereumTx(t *testing.T) {
 func TestSigningEthereumTx(t *testing.T) {
 	config := NewConfig()
 	AddPrivateKey(config, "./fixtures/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
+	sender := "0x3cb8e3FD9d27e39a5e9e6852b0e96160061fd4ea"
 	password := "password"
 
 	store := storelib.NewStore(config)
@@ -55,6 +57,9 @@ func TestSigningEthereumTx(t *testing.T) {
 	result := adapter.Perform(input)
 	assert.Contains(t, result.Value(), data)
 	assert.Contains(t, result.Value(), recipient[2:len(recipient)])
+
+	actual, err := utils.SenderFromTxHex(result.Value(), config.ChainID)
+	assert.Equal(t, sender, actual.Hex())
 }
 
 

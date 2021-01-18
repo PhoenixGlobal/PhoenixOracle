@@ -62,13 +62,16 @@ func TestCreateTasks(t *testing.T) {
 }
 
 func TestCreateJobsIntegration(t *testing.T) {
-	t.Parallel()
 	RegisterTestingT(t)
 
+	config := NewConfig()
+	AddPrivateKey(config, "../adapters/fixtures/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
 	app := NewApplication()
 	server := app.NewServer()
 	defer app.Stop()
 	//RegisterTestingT(t)
+	err := app.Store.KeyStore.Unlock("password")
+	assert.Nil(t, err)
 	defer CloseGock(t)
 	gock.EnableNetworking()
 
