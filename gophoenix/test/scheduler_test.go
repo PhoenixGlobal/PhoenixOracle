@@ -1,8 +1,8 @@
 package test
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
+	"PhoenixOracle/gophoenix/core/store/models"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"testing"

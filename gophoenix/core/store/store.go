@@ -2,7 +2,7 @@ package store
 
 import (
 	"PhoenixOracle/gophoenix/core/logger"
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"os"
 	"os/signal"
 	"syscall"

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"gopkg.in/guregu/null.v3"
 	"testing"
 

@@ -6,7 +6,7 @@ import (
 )
 
 type RunResult struct {
-	Output  Output
+	Output       Output
 	ErrorMessage null.String
 }
 

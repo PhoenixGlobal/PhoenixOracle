@@ -2,8 +2,8 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
-	"PhoenixOracle/gophoenix/core/models"
 	storelib "PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/stretchr/testify/assert"
 	gock "gopkg.in/h2non/gock.v1"
 	"testing"

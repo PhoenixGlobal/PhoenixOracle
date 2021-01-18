@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/guregu/null.v3"

@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
-	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/services"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 )

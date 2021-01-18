@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/ethereum/go-ethereum/common"
 )
 

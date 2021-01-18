@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +12,7 @@ type HttpGet struct {
 	Endpoint string `json:"endpoint"`
 }
 
-func (self HttpGet) Perform(input models.RunResult) models.RunResult{
+func (self HttpGet) Perform(input models.RunResult) models.RunResult {
 	response, err := http.Get(self.Endpoint)
 	fmt.Println("***********************")
 	fmt.Println(response)

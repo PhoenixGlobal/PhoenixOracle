@@ -10,7 +10,7 @@ type JobRun struct {
 	Status    string
 	CreatedAt time.Time `storm:"index"`
 	Result    RunResult `storm:"inline"`
-	TaskRuns  []TaskRun          `storm:"inline"`
+	TaskRuns  []TaskRun `storm:"inline"`
 }
 
 func (self JobRun) ForLogger(kvs ...interface{}) []interface{} {

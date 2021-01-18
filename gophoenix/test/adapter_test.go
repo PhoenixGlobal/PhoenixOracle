@@ -2,7 +2,7 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

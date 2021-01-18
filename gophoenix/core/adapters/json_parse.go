@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"PhoenixOracle/gophoenix/core/models"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"errors"
 	simplejson "github.com/bitly/go-simplejson"
 )

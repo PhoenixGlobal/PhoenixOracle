@@ -2,8 +2,8 @@ package services
 
 import (
 	"PhoenixOracle/gophoenix/core/logger"
-	"PhoenixOracle/gophoenix/core/models"
 	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"errors"
 	"fmt"
 	cronlib "github.com/mrwonko/cron"
