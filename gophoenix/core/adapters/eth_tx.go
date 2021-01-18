@@ -37,8 +37,13 @@ type EthSignTx struct {
 func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 	str := self.FunctionID + input.Value()
 	data := common.FromHex(str)
+	keyStore := self.Store.KeyStore
+	nonce, err := keyStore.GetAccount().GetNonce(self.Store.Config)
+	if err != nil {
+		return models.RunResultWithError(err)
+	}
 	tx := types.NewTransaction(
-		1,
+		nonce,
 		common.HexToAddress(self.Address),
 		big.NewInt(0),
 		500000,
@@ -46,7 +51,7 @@ func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 		data,
 	)
 
-	signedTx, err := self.Store.KeyStore.SignTx(tx, self.Store.Config.ChainID)
+	signedTx, err := keyStore.SignTx(tx, self.Store.Config.ChainID)
 	if err != nil {
 		return models.RunResultWithError(err)
 	}

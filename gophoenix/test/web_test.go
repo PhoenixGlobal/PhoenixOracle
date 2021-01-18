@@ -65,7 +65,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
 	config := NewConfig()
-	AddPrivateKey(config, "../adapters/fixtures/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
+	AddPrivateKey(config, "./fixture/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
 	app := NewApplication()
 	server := app.NewServer()
 	defer app.Stop()
@@ -87,6 +87,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	ethResponse := `{"result": "0x0100"}`
 	gock.New(app.Store.Config.EthereumURL).
 		Post("").
+		Times(2).
 		Reply(200).
 		JSON(ethResponse)
 
