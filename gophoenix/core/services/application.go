@@ -33,7 +33,7 @@ func (self *Application) Stop() error {
 }
 
 func (self *Application) AddJob(job models.Job) error {
-	err := self.Store.Save(&job)
+	err := self.Store.SaveJob(job)
 	if err != nil {
 		return err
 	}

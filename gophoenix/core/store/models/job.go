@@ -11,10 +11,18 @@ import (
 
 type Job struct {
 	ID        string    `storm:"id,index,unique"`
-	Schedule  Schedule  `json:"schedule" storm:"inline"`
+	Initiators []Initiator `json:"initiators"`
 	Tasks     []Task    `json:"tasks" storm:"inline"`
 	CreatedAt time.Time `storm:"index"`
 }
+
+type Initiator struct {
+	ID       int    `storm:"id,increment"`
+	Type     string `json:"type" storm:"index"`
+	Schedule Cron   `json:"schedule"`
+	JobID    string `storm:"index"`
+}
+
 
 type Schedule struct {
 	Cron    Cron   `json:"cron" storm:"index"`
@@ -49,6 +57,16 @@ func (self Job) NewRun() JobRun {
 	}
 
 	return run
+}
+
+func (self Job) Schedules() []Initiator {
+	list := []Initiator{}
+	for _, initr := range self.Initiators {
+		if initr.Type == "cron" {
+			list = append(list, initr)
+		}
+	}
+	return list
 }
 
 

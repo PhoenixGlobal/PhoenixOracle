@@ -1,7 +1,6 @@
 package test
 
 import (
-	"PhoenixOracle/gophoenix/core/store/models"
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -22,8 +21,7 @@ func TestJobRunsIndex(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	j := models.NewJob()
-	j.Schedule = models.Schedule{Cron: "schedule test"}
+	j := NewJobWithSchedule("schedule test")
 	err := app.Store.Save(&j)
 	assert.Nil(t, err)
 	jr := j.NewRun()

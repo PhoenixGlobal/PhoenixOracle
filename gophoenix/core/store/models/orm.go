@@ -1,8 +1,8 @@
 package models
 
 import (
-	"fmt"
 	"github.com/asdine/storm"
+	"github.com/asdine/storm/q"
 	"log"
 	"path"
 	"reflect"
@@ -55,10 +55,35 @@ func emptySlice(to interface{}) {
 
 
 func (self *ORM) JobsWithCron() ([]Job, error) {
+	initrs := []Initiator{}
+	self.Where("Type", "cron", &initrs)
+	jobIDs := []string{}
+	for _, initr := range initrs {
+		jobIDs = append(jobIDs, initr.JobID)
+	}
 	jobs := []Job{}
-	err := self.AllByIndex("Cron", &jobs)
-	fmt.Println(jobs)
+	err := self.Select(q.In("ID",jobIDs)).Find(&jobs)
+	if err == storm.ErrNotFound {
+		return jobs, nil
+	}
 	return jobs, err
 }
 
+func (self *ORM) SaveJob(job Job) error {
+	tx, err := self.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
 
+	if err := tx.Save(&job); err != nil {
+		return err
+	}
+	for _, initr := range job.Initiators {
+		initr.JobID = job.ID
+		if err := tx.Save(&initr); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}

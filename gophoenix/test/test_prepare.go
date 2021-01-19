@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/web"
 	"encoding/json"
 	"fmt"
@@ -192,4 +193,9 @@ func BasicAuthGet(url string) (*http.Response, error) {
 	request.SetBasicAuth(testUsername, testPassword)
 	resp, err := client.Do(request)
 	return resp, err
+}
+func NewJobWithSchedule(sched string) models.Job {
+	j := models.NewJob()
+	j.Initiators = []models.Initiator{{Type: "cron", Schedule: models.Cron(sched)}}
+	return j
 }

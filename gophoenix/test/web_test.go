@@ -33,7 +33,6 @@ func TestCreateTasks(t *testing.T) {
 	var j models.Job
 	app.Store.One("ID", respJSON.ID, &j)
 	assert.Equal(t, j.ID, respJSON.ID, "Wrong job returned")
-	assert.Equal(t, j.Tasks[0].Type, "HttpGet")
 
 	adapter1,_ := adapters.For(j.Tasks[0],app.Store)
 	httpGet := adapter1.(*adapters.HttpGet)
@@ -50,13 +49,10 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, signTx.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, signTx.FunctionID, "12345679")
 
-	schedule := j.Schedule
-	assert.Equal(t, schedule.Cron, models.Cron("* * * * *"))
-	assert.Equal(t, (*models.Time)(nil), schedule.StartAt, "Wrong start at saved")
-	endAt := models.Time{TimeParse("2020-12-17T14:05:29Z")}
-	assert.Equal(t, endAt, *schedule.EndAt, "Wrong end at saved")
-	runAt0 := models.Time{TimeParse("2020-12-17T14:05:19Z")}
-	assert.Equal(t, runAt0, schedule.RunAt[0], "Wrong run at saved")
+	var initr models.Initiator
+	app.Store.One("JobID", j.ID, &initr)
+	assert.Equal(t, "cron", initr.Type)
+	assert.Equal(t, "* * * * *", string(initr.Schedule), "Wrong cron schedule saved")
 
 
 }
@@ -101,7 +97,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		_ = app.Store.Where("JobID", respJSON.ID, &jobRuns)
+		app.Store.Where("JobID", respJSON.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 
@@ -172,8 +168,7 @@ func TestShowJobs(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	j := models.NewJob()
-	j.Schedule = models.Schedule{Cron: "1 * * * *"}
+	j := NewJobWithSchedule("*****")
 
 	app.Store.Save(&j)
 
@@ -185,7 +180,7 @@ func TestShowJobs(t *testing.T) {
 
 	var respJob models.Job
 	json.Unmarshal(b, &respJob)
-	assert.Equal(t, respJob.Schedule, j.Schedule, "should have the same schedule")
+	assert.Equal(t, respJob.Initiators[0].Schedule, j.Initiators[0].Schedule, "should have the same schedule")
 }
 
 func TestShowNotFoundJobs(t *testing.T) {
