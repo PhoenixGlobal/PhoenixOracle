@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
 	"encoding/json"
+	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
@@ -47,6 +48,8 @@ func TestJobRunsIndex(t *testing.T) {
 func TestJobRunsCreate(t *testing.T) {
 	t.Parallel()
 
+	RegisterTestingT(t)
+
 	app := NewApplication()
 	server := app.NewServer()
 	defer app.Stop()
@@ -61,6 +64,16 @@ func TestJobRunsCreate(t *testing.T) {
 	respJSON := JobJSONFromResponse(resp.Body)
 
 	jr := models.JobRun{}
+	Eventually(func() string {
+		jobRuns := []models.JobRun{}
+		app.Store.Where("ID", respJSON.ID, &jobRuns)
+		if len(jobRuns) == 0{
+			return ""
+		}
+		jr = jobRuns[0]
+		return jr.Status
+	}).Should(Equal("completed"))
+
 	assert.Nil(t, app.Store.One("ID", respJSON.ID, &jr))
 	assert.Equal(t, jr.ID, respJSON.ID)
 }

@@ -194,14 +194,21 @@ func BasicAuthGet(url string) (*http.Response, error) {
 	resp, err := client.Do(request)
 	return resp, err
 }
-func NewJobWithSchedule(sched string) models.Job {
+
+func NewJob() models.Job {
 	j := models.NewJob()
+	j.Tasks = []models.Task{{Type: "NoOp"}}
+	return j
+}
+
+func NewJobWithSchedule(sched string) models.Job {
+	j := NewJob()
 	j.Initiators = []models.Initiator{{Type: "cron", Schedule: models.Cron(sched)}}
 	return j
 }
 
 func NewJobWithWebInitiator() models.Job {
-	j := models.NewJob()
+	j := NewJob()
 	j.Initiators = []models.Initiator{{Type: "web"}}
 	return j
 }

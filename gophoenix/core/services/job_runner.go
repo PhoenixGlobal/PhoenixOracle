@@ -21,7 +21,9 @@ func StartJob(run models.JobRun, store *store.Store) error {
 		run.TaskRuns[i] = prevRun
 
 		err:= store.Save(&run); if err != nil {
+			fmt.Println("*****************************")
 			return runJobError(run, err)
+			fmt.Println("*****************************")
 		}
 
 		if prevRun.Result.HasError() {
