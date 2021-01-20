@@ -13,17 +13,18 @@ import (
 )
 
 func Router(app *services.Application) *gin.Engine {
-	r := gin.New()
+	engine := gin.New()
 	config := app.Store.Config
 	basicAuth := gin.BasicAuth(gin.Accounts{config.BasicAuthUsername: config.BasicAuthPassword})
-	r.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
+	engine.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
 	t := controllers.JobsController{app}
-	r.POST("/jobs", t.Create)
-	r.GET("/jobs/:id", t.Show)
+	engine.POST("/jobs", t.Create)
+	engine.GET("/jobs/:id", t.Show)
 
 	jr := controllers.JobRunsController{app}
-	r.GET("/jobs/:id/runs", jr.Index)
-	return r
+	engine.GET("/jobs/:id/runs", jr.Index)
+	engine.POST("/jobs/:jobID/runs", jr.Create)
+	return engine
 }
 
 func loggerFunc(logger *logger.Logger) gin.HandlerFunc {

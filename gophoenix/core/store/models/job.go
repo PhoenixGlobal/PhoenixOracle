@@ -23,14 +23,6 @@ type Initiator struct {
 	JobID    string `storm:"index"`
 }
 
-
-type Schedule struct {
-	Cron    Cron   `json:"cron" storm:"index"`
-	StartAt *Time  `json:"startAt"`
-	EndAt   *Time  `json:"endAt"`
-	RunAt   []Time `json:"runAt"`
-}
-
 type Cron string
 
 type Time struct {
@@ -69,6 +61,15 @@ func (self Job) Schedules() []Initiator {
 	return list
 }
 
+func (self Job) WebAuthorized() bool {
+	for _, initr := range self.Initiators {
+		if initr.Type == "web" {
+			return true
+		}
+	}
+	return false
+}
+
 
 func (self *Time) UnmarshalJSON(b []byte) error {
 	var s string
@@ -83,6 +84,9 @@ func (self *Cron) UnmarshalJSON(b []byte) error{
 	err := json.Unmarshal(b, &s)
 	if err != nil{
 		return fmt.Errorf("Cron: %v",err)
+	}
+	if s == "" {
+		return nil
 	}
 	_, err = cron.Parse(s)
 
