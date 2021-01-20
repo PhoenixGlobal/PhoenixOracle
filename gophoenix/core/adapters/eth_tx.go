@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rpc"
 	"math/big"
 )
 
@@ -14,16 +13,10 @@ type EthSendRawTx struct {
 }
 
 func (self *EthSendRawTx) Perform(input models.RunResult) models.RunResult {
-	eth, err := rpc.Dial(self.Store.Config.EthereumURL)
+	result, err := self.Store.Eth.SendRawTx(input.Value())
 	if err != nil {
 		return models.RunResultWithError(err)
 	}
-	var result string
-	err = eth.Call(&result, "eth_sendRawTransaction", input.Value())
-	if err != nil {
-		return models.RunResultWithError(err)
-	}
-
 	return models.RunResultWithValue(result)
 }
 
