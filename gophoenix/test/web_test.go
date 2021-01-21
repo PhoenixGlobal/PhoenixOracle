@@ -6,6 +6,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -45,7 +47,7 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
 	adapter3,_ := adapters.For(j.Tasks[3],app.Store)
-	signTx := adapter3.(*adapters.EthSignTx)
+	signTx := adapter3.(*adapters.EthSignAndSendTx)
 	assert.Equal(t, signTx.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, signTx.FunctionID, "12345679")
 
@@ -60,9 +62,7 @@ func TestCreateTasks(t *testing.T) {
 func TestCreateJobsIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
-	config := NewConfig()
-	AddPrivateKey(config, "./fixture/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
-	app := NewApplicationWithConfig(config)
+	app := NewApplicationWithKeyStore()
 	eth := app.MockEthClient()
 	server := app.NewServer()
 	defer app.Stop()
@@ -83,6 +83,8 @@ func TestCreateJobsIntegration(t *testing.T) {
 	eth.Register("eth_getTransactionCount", `0x0100`)
 	rawTxResp := `0x6798b8110efe9c191a978d75954d0fbdd53bd866f7534fa0228802fa89d27b83`
 	eth.Register("eth_sendRawTransaction", rawTxResp)
+	eth.Register("eth_getTransactionReceipt", types.Receipt{TxHash: common.HexToHash(rawTxResp)})
+	eth.Register("eth_blockNumber", "0x0111")
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -112,6 +114,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
 	jobRun = jobRuns[0]
 	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
+	assert.Equal(t, rawTxResp, jobRun.TaskRuns[3].Result.Value())
 	assert.Equal(t, rawTxResp, jobRun.Result.Value())
 }
 

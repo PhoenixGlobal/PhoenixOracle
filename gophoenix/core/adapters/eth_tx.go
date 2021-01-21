@@ -7,26 +7,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
+	"time"
 )
-
-type EthSendRawTx struct {
-	AdapterBase
-}
-
-func (self *EthSendRawTx) Perform(input models.RunResult) models.RunResult {
-	result, err := self.Store.Eth.SendRawTx(input.Value())
-	if err != nil {
-		return models.RunResultWithError(err)
-	}
-	return models.RunResultWithValue(result)
-}
 
 type EthSignTx struct {
 	AdapterBase
 	Address    string `json:"address"`
 	FunctionID string `json:"functionID"`
 }
-
 
 func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 	str := self.FunctionID + input.Value()
@@ -58,3 +46,64 @@ func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 	}
 	return models.RunResultWithValue(common.Bytes2Hex(buffer.Bytes()))
 }
+
+type EthSendRawTx struct {
+	AdapterBase
+}
+
+func (self *EthSendRawTx) Perform(input models.RunResult) models.RunResult {
+	result, err := self.Store.Eth.SendRawTx(input.Value())
+	if err != nil {
+		return models.RunResultWithError(err)
+	}
+	return models.RunResultWithValue(result)
+}
+
+type EthConfirmTx struct {
+	AdapterBase
+}
+
+func (self *EthConfirmTx) Perform(input models.RunResult) models.RunResult {
+	txid := input.Value()
+	for {
+		receipt, err := self.Store.Eth.GetTxReceipt(txid)
+		if err != nil {
+			return models.RunResultWithError(err)
+		} else if receipt.TxHash.Hex() == "" {
+			time.Sleep(1000 * time.Millisecond)
+		} else {
+			return models.RunResultWithValue(txid)
+		}
+	}
+}
+
+type EthSignAndSendTx struct {
+	AdapterBase
+	Address    string `json:"address"`
+	FunctionID string `json:"functionID"`
+}
+
+func (self *EthSignAndSendTx) Perform(input models.RunResult) models.RunResult {
+	signer := &EthSignTx{
+		Address:     self.Address,
+		FunctionID:  self.FunctionID,
+		AdapterBase: AdapterBase{self.Store},
+	}
+	sender := &EthSendRawTx{
+		AdapterBase: AdapterBase{self.Store},
+	}
+	confirmer := &EthConfirmTx{
+		AdapterBase: AdapterBase{self.Store},
+	}
+
+	signed := signer.Perform(input)
+	if signed.HasError() {
+		return signed
+	}
+	sent := sender.Perform(signed)
+	if sent.HasError() {
+		return sent
+	}
+	return confirmer.Perform(sent)
+}
+

@@ -2,7 +2,6 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
-	storelib "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
 	"github.com/stretchr/testify/assert"
@@ -14,10 +13,10 @@ func TestSendingEthereumTx(t *testing.T) {
 	store := NewStore()
 	defer store.Close()
 	defer CloseGock(t)
+	config := store.Config
 
 	value := "0000abcdef"
 	input := models.RunResultWithValue(value)
-	config := store.Config
 	response := `{"result": "0x0100"}`
 	gock.New(config.EthereumURL).
 		Post("").
@@ -34,9 +33,11 @@ func TestSendingEthereumTx(t *testing.T) {
 
 func TestSigningEthereumTx(t *testing.T) {
 	defer CloseGock(t)
-	config := NewConfig()
-	AddPrivateKey(config, "./fixtures/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
-	sender := "0x3cb8e3FD9d27e39a5e9e6852b0e96160061fd4ea"
+	app := NewApplicationWithKeyStore()
+	defer app.Stop()
+	store := app.Store
+	config := app.Store.Config
+	sender := store.KeyStore.GetAccount().Address.String()
 	password := "password"
 
 	response := `{"result": "0x11"}`
@@ -44,9 +45,6 @@ func TestSigningEthereumTx(t *testing.T) {
 		Post("").
 		Reply(200).
 		JSON(response)
-
-	store := storelib.NewStore(config)
-	defer CleanUpStore(store)
 
 	err := store.KeyStore.Unlock(password)
 	assert.Nil(t, err)
@@ -72,5 +70,27 @@ func TestSigningEthereumTx(t *testing.T) {
 	actual, err := utils.SenderFromTxHex(result.Value(), config.ChainID)
 	assert.Equal(t, sender, actual.Hex())
 }
+
+func TestSigningAndSendingTx(t *testing.T) {
+	defer CloseGock(t)
+
+	app := NewApplicationWithKeyStore()
+	defer app.Stop()
+	store := app.Store
+	eth := app.MockEthClient()
+	eth.RegisterError("eth_getTransactionCount", "Cannot connect to nodes")
+
+	adapter := adapters.EthSignTx{
+		Address:     "recipient",
+		FunctionID:  "fid",
+		AdapterBase: adapters.AdapterBase{store},
+	}
+	input := models.RunResultWithValue("Hello World!")
+	output := adapter.Perform(input)
+
+	assert.True(t, output.HasError())
+	assert.Equal(t, output.Error(), "Cannot connect to nodes")
+}
+
 
 

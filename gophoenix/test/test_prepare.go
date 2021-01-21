@@ -100,6 +100,15 @@ func NewApplicationWithConfig(config store.Config) *TestApplication {
 	return  &TestApplication{Application: services.NewApplication(config)}
 }
 
+func NewApplicationWithKeyStore() *TestApplication {
+	app := NewApplication()
+	_, err := app.Store.KeyStore.NewAccount("password")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return app
+}
+
 func (self *TestApplication)NewServer() *httptest.Server {
 	gin.SetMode(gin.TestMode)
 	server := httptest.NewServer(web.Router(self.Application))
@@ -132,10 +141,12 @@ type EthMock struct {
 
 type MockResponse struct {
 	methodName string
-	response   string
+	response   interface{}
+	errMsg     string
+	hasError   bool
 }
 
-func (self *EthMock) Register(method, response string) {
+func (self *EthMock) Register(method string, response interface{}) {
 	res := MockResponse{
 		methodName: method,
 		response:   response,
@@ -143,12 +154,30 @@ func (self *EthMock) Register(method, response string) {
 	self.Responses = append(self.Responses, res)
 }
 
+func (self *EthMock) RegisterError(method, errMsg string) {
+	res := MockResponse{
+		methodName: method,
+		errMsg:     errMsg,
+		hasError:   true,
+	}
+	self.Responses = append(self.Responses, res)
+}
+
+func RemoveIndex(s []MockResponse, index int) []MockResponse {
+	return append(s[:index], s[index+1:]...)
+}
+
 func (self *EthMock) Call(result interface{}, method string, args ...interface{}) error {
-	for _, resp := range self.Responses {
+	for i, resp := range self.Responses[:] {
 		if resp.methodName == method {
-			ref := reflect.ValueOf(result)
-			reflect.Indirect(ref).Set(reflect.ValueOf(resp.response))
-			return nil
+			self.Responses = RemoveIndex(self.Responses, i)
+			if resp.hasError {
+				return fmt.Errorf(resp.errMsg)
+			} else {
+				ref := reflect.ValueOf(result)
+				reflect.Indirect(ref).Set(reflect.ValueOf(resp.response))
+				return nil
+			}
 		}
 	}
 	return fmt.Errorf("EthMock: Method %v not registered", method)
