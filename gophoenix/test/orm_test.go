@@ -9,7 +9,7 @@ import (
 func TestWhereNotFound(t *testing.T) {
 	t.Parallel()
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	j1 := models.NewJob()
 	jobs := []models.Job{j1}
@@ -22,7 +22,7 @@ func TestWhereNotFound(t *testing.T) {
 func TestAllNotFound(t *testing.T) {
 	t.Parallel()
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	var jobs []models.Job
 	err := store.All(&jobs)
@@ -33,7 +33,7 @@ func TestAllNotFound(t *testing.T) {
 func TestORMSaveJob(t *testing.T) {
 	t.Parallel()
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	j1 := NewJobWithSchedule("* * * * *")
 	store.SaveJob(j1)
@@ -46,4 +46,30 @@ func TestORMSaveJob(t *testing.T) {
 	store.One("JobID", j1.ID, &initr)
 	assert.Equal(t, models.Cron("* * * * *"), initr.Schedule)
 }
+
+func TestPendingJobRuns(t *testing.T) {
+	t.Parallel()
+	store := NewStore()
+	defer CleanUpStore(store)
+
+	j := models.NewJob()
+	assert.Nil(t, store.SaveJob(j))
+	npr := j.NewRun()
+	assert.Nil(t, store.Save(&npr))
+
+	pr := j.NewRun()
+	pr.Status = "pending"
+	assert.Nil(t, store.Save(&pr))
+
+	pending, err := store.PendingJobRuns()
+	assert.Nil(t, err)
+	pendingIDs := []string{}
+	for _, jr := range pending {
+		pendingIDs = append(pendingIDs, jr.ID)
+	}
+
+	assert.Contains(t, pendingIDs, pr.ID)
+	assert.NotContains(t, pendingIDs, npr.ID)
+}
+
 
