@@ -3,6 +3,7 @@ package adapters
 import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
@@ -30,8 +31,10 @@ type EthSignTx struct {
 func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 	str := self.FunctionID + input.Value()
 	data := common.FromHex(str)
+	fmt.Println("&&&&&&&&&&&&&&&&&&&&&")
+	fmt.Println(self.Store)
 	keyStore := self.Store.KeyStore
-	nonce, err := keyStore.GetAccount().GetNonce(self.Store.Config)
+	nonce, err := self.Store.Eth.GetNonce(keyStore.GetAccount())
 	if err != nil {
 		return models.RunResultWithError(err)
 	}

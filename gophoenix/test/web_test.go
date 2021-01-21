@@ -5,13 +5,13 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"time"
 )
 
 
@@ -62,17 +62,17 @@ func TestCreateJobsIntegration(t *testing.T) {
 
 	config := NewConfig()
 	AddPrivateKey(config, "./fixture/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
-	app := NewApplication()
+	app := NewApplicationWithConfig(config)
+	eth := app.MockEthClient()
 	server := app.NewServer()
 	defer app.Stop()
 	//RegisterTestingT(t)
 	err := app.Store.KeyStore.Unlock("password")
+	fmt.Println("*****************")
+	fmt.Println(app.Store)
 	assert.Nil(t, err)
 	defer CloseGock(t)
 	gock.EnableNetworking()
-
-	store := Store()
-	//store.Start()
 
 	tickerResponse := `{"high": "10744.00", "last": "10583.75", "timestamp": "1512156162", "bid": "10555.13", "vwap": "10097.98", "volume": "17861.33960013", "low": "9370.11", "ask": "10583.00", "open": "9927.29"}`
 	gock.New("https://www.bitstamp.net").
@@ -80,12 +80,9 @@ func TestCreateJobsIntegration(t *testing.T) {
 		Reply(200).
 		JSON(tickerResponse)
 
-	ethResponse := `{"result": "0x0100"}`
-	gock.New(app.Store.Config.EthereumURL).
-		Post("").
-		Times(2).
-		Reply(200).
-		JSON(ethResponse)
+	eth.Register("eth_getTransactionCount", `0x0100`)
+	rawTxResp := `0x6798b8110efe9c191a978d75954d0fbdd53bd866f7534fa0228802fa89d27b83`
+	eth.Register("eth_sendRawTransaction", rawTxResp)
 
 	jsonStr := LoadJSON("./fixture/create_jobs.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -107,10 +104,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "HttpGet",job.Tasks[0].Type)
 
-	time.Sleep(1000000)
-
-
-	jobRuns, err = store.JobRunsFor(job)
+	jobRuns, err = app.Store.JobRunsFor(job)
 	assert.Equal(t, 1, len(jobRuns))
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
@@ -118,7 +112,7 @@ func TestCreateJobsIntegration(t *testing.T) {
 	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
 	jobRun = jobRuns[0]
 	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
-	assert.Equal(t, "0x0100", jobRun.Result.Value())
+	assert.Equal(t, rawTxResp, jobRun.Result.Value())
 }
 
 

@@ -81,7 +81,7 @@ func validateTask(task models.Task) error {
 	return err
 }
 
-func (self AdapterBase) setStore(s *store.Store) {
+func (self *AdapterBase) setStore(s *store.Store) {
 	self.Store = s
 }
 
