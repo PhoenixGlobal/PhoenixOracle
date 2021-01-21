@@ -1,17 +1,16 @@
 package adapters
 
 import (
+	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/ethereum/go-ethereum/common"
 )
 
-type EthBytes32 struct {
-	AdapterBase
-}
+type EthBytes32 struct {}
 
 const maxBytes32HexLength = 32 * 2
 
-func (self *EthBytes32) Perform(input models.RunResult) models.RunResult {
+func (self *EthBytes32) Perform(input models.RunResult, _ *store.Store) models.RunResult {
 	value := common.RightPadBytes([]byte(input.Value()), 32)
 	hex := removeHexPrefix(common.Bytes2Hex(value))
 

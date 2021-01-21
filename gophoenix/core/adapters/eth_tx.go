@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
 	"fmt"
@@ -11,18 +12,16 @@ import (
 )
 
 type EthSignTx struct {
-	AdapterBase
 	Address    string `json:"address"`
 	FunctionID string `json:"functionID"`
 }
 
-func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
+func (self *EthSignTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
 	str := self.FunctionID + input.Value()
 	data := common.FromHex(str)
 	fmt.Println("&&&&&&&&&&&&&&&&&&&&&")
-	fmt.Println(self.Store)
-	keyStore := self.Store.KeyStore
-	nonce, err := self.Store.Eth.GetNonce(keyStore.GetAccount())
+	keyStore := store.KeyStore
+	nonce, err := store.Eth.GetNonce(keyStore.GetAccount())
 	if err != nil {
 		return models.RunResultWithError(err)
 	}
@@ -35,7 +34,7 @@ func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 		data,
 	)
 
-	signedTx, err := keyStore.SignTx(tx, self.Store.Config.ChainID)
+	signedTx, err := keyStore.SignTx(tx, store.Config.ChainID)
 	if err != nil {
 		return models.RunResultWithError(err)
 	}
@@ -47,26 +46,22 @@ func (self *EthSignTx) Perform(input models.RunResult) models.RunResult {
 	return models.RunResultWithValue(common.Bytes2Hex(buffer.Bytes()))
 }
 
-type EthSendRawTx struct {
-	AdapterBase
-}
+type EthSendRawTx struct {}
 
-func (self *EthSendRawTx) Perform(input models.RunResult) models.RunResult {
-	result, err := self.Store.Eth.SendRawTx(input.Value())
+func (self *EthSendRawTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
+	result, err := store.Eth.SendRawTx(input.Value())
 	if err != nil {
 		return models.RunResultWithError(err)
 	}
 	return models.RunResultWithValue(result)
 }
 
-type EthConfirmTx struct {
-	AdapterBase
-}
+type EthConfirmTx struct {}
 
-func (self *EthConfirmTx) Perform(input models.RunResult) models.RunResult {
+func (self *EthConfirmTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
 	txid := input.Value()
 	for {
-		receipt, err := self.Store.Eth.GetTxReceipt(txid)
+		receipt, err := store.Eth.GetTxReceipt(txid)
 		if err != nil {
 			return models.RunResultWithError(err)
 		} else if receipt.TxHash.Hex() == "" {
@@ -78,32 +73,28 @@ func (self *EthConfirmTx) Perform(input models.RunResult) models.RunResult {
 }
 
 type EthSignAndSendTx struct {
-	AdapterBase
 	Address    string `json:"address"`
 	FunctionID string `json:"functionID"`
 }
 
-func (self *EthSignAndSendTx) Perform(input models.RunResult) models.RunResult {
+func (self *EthSignAndSendTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
 	signer := &EthSignTx{
 		Address:     self.Address,
 		FunctionID:  self.FunctionID,
-		AdapterBase: AdapterBase{self.Store},
 	}
 	sender := &EthSendRawTx{
-		AdapterBase: AdapterBase{self.Store},
 	}
 	confirmer := &EthConfirmTx{
-		AdapterBase: AdapterBase{self.Store},
 	}
 
-	signed := signer.Perform(input)
+	signed := signer.Perform(input,store)
 	if signed.HasError() {
 		return signed
 	}
-	sent := sender.Perform(signed)
+	sent := sender.Perform(signed,store)
 	if sent.HasError() {
 		return sent
 	}
-	return confirmer.Perform(sent)
+	return confirmer.Perform(sent,store)
 }
 

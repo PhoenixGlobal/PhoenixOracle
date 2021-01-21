@@ -11,7 +11,7 @@ func TestEthGetTxReceipt(t *testing.T) {
 	defer store.Close()
 	eth := store.Eth
 
-	response := LoadJSON("../internal/fixtures/web/eth_getTransactionReceipt.json")
+	response := LoadJSON("./fixture/eth_getTransactionReceipt.json")
 	gock.New(store.Config.EthereumURL).
 		Post("").
 		Reply(200).
