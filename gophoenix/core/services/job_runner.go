@@ -15,10 +15,12 @@ func StartJob(run models.JobRun, store *store.Store) (models.JobRun, error) {
 	}
 
 	logger.GetLogger().Infow("starting job", run.ForLogger()...)
-	var prevRun models.TaskRun
-	for i, taskRun := range run.TasksToRun() {
+	unfinished := run.UnfinishedTaskRuns()
+	offset := len(run.TaskRuns) - len(unfinished)
+	prevRun := run.NextTaskRun()
+	for i, taskRun := range unfinished {
 		prevRun = startTask(taskRun, prevRun.Result, store)
-		run.TaskRuns[i] = prevRun
+		run.TaskRuns[i+offset] = prevRun
 
 		err:= store.Save(&run); if err != nil {
 			fmt.Println("*****************************")

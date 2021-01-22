@@ -14,7 +14,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	store := NewStore()
 	defer CleanUpStore(store)
 
-	j := models.NewJob()
+	j := NewJob()
 	j.Initiators = []models.Initiator{{Type: "cron", Schedule: "* * * * *"}}
 	jobWoCron := models.NewJob()
 	assert.Nil(t, store.SaveJob(j))

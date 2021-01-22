@@ -24,17 +24,16 @@ func (self *Scheduler) Start() error {
 	if self.started {
 		return errors.New("Scheduler already started")
 	}
-	self.started = true
 	self.cron = cronlib.New()
 	jobs,err := self.store.JobsWithCron()
 	if err != nil {
 		return fmt.Errorf("Scheduler: ", err)
 	}
-
+	self.started = true
 	for _, j := range jobs {
 		self.AddJob(j)
 	}
-
+	self.addResumer()
 	self.cron.Start()
 	return nil
 }
@@ -61,5 +60,20 @@ func (self *Scheduler) Stop() {
 		self.cron.Wait()
 		self.started = false
 	}
+}
+
+func (self *Scheduler) addResumer() {
+	self.cron.AddFunc(self.store.Config.PollingSchedule, func() {
+		pendingRuns, err := self.store.PendingJobRuns()
+		if err != nil {
+			logger.Panic(err.Error())
+		}
+		for _, jobRun := range pendingRuns {
+			_, err := StartJob(jobRun, self.store)
+			if err != nil {
+				logger.Panic(err.Error())
+			}
+		}
+	})
 }
 
