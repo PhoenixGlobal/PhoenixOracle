@@ -5,7 +5,6 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	. "github.com/onsi/gomega"
@@ -23,7 +22,7 @@ func TestCreateTasks(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	jsonStr := LoadJSON("./fixture/create_jobs.json")
+	jsonStr := LoadJSON("./fixture/job_integration.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	//if err != nil {
 	//	t.Fatal(err)
@@ -53,24 +52,48 @@ func TestCreateTasks(t *testing.T) {
 
 	var initr models.Initiator
 	app.Store.One("JobID", j.ID, &initr)
-	assert.Equal(t, "cron", initr.Type)
-	assert.Equal(t, "* * * * *", string(initr.Schedule), "Wrong cron schedule saved")
-
-
+	assert.Equal(t, "web", initr.Type)
 }
 
-func TestCreateJobsIntegration(t *testing.T) {
+func TestCreateJobSchedulerIntegration(t *testing.T) {
+	RegisterTestingT(t)
+
+	app := NewApplication()
+	server := app.NewServer()
+	app.Start()
+	defer app.Stop()
+
+	jsonStr := LoadJSON("./fixture/no_op_jobs.json")
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	assert.Nil(t, err)
+	defer resp.Body.Close()
+	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
+	respJSON := JobJSONFromResponse(resp.Body)
+
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		app.Store.Where("JobID", respJSON.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(1))
+
+	var initr models.Initiator
+	app.Store.One("JobID", respJSON.ID, &initr)
+	assert.Equal(t, "cron", initr.Type)
+	assert.Equal(t, "* * * * *", string(initr.Schedule), "Wrong cron schedule saved")
+}
+
+func TestCreateJobIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
 	app := NewApplicationWithKeyStore()
 	eth := app.MockEthClient()
 	server := app.NewServer()
+	app.Start()
 	defer app.Stop()
-	//RegisterTestingT(t)
+
 	err := app.Store.KeyStore.Unlock("password")
-	fmt.Println("*****************")
-	fmt.Println(app.Store)
 	assert.Nil(t, err)
+
 	defer CloseGock(t)
 	gock.EnableNetworking()
 
@@ -86,41 +109,40 @@ func TestCreateJobsIntegration(t *testing.T) {
 	eth.Register("eth_getTransactionReceipt", types.Receipt{})
 	eth.Register("eth_getTransactionReceipt", types.Receipt{TxHash: common.HexToHash(rawTxResp)})
 
-	jsonStr := LoadJSON("./fixture/create_jobs.json")
+	jsonStr := LoadJSON("./fixture/job_integration.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	assert.Nil(t, err)
 	defer resp.Body.Close()
-	respJSON := JobJSONFromResponse(resp.Body)
+	jobID := JobJSONFromResponse(resp.Body).ID
 
-	app.Start()
+	url := server.URL + "/jobs/" + jobID + "/runs"
+	resp, err = BasicAuthPost(url, "application/json", &bytes.Buffer{})
+	assert.Nil(t, err)
+	jrID := JobJSONFromResponse(resp.Body).ID
 
 	jobRuns := []models.JobRun{}
 	Eventually(func() []models.JobRun {
-		app.Store.Where("JobID", respJSON.ID, &jobRuns)
+		app.Store.Where("JobID", jobID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
 
 	var job models.Job
-	err = app.Store.One("ID", respJSON.ID, &job)
+	err = app.Store.One("ID", jobID, &job)
 	assert.Nil(t, err)
-	assert.Equal(t, "HttpGet",job.Tasks[0].Type)
 
 	jobRuns, err = app.Store.JobRunsFor(job)
-	assert.Equal(t, 1, len(jobRuns))
 	assert.Nil(t, err)
 	jobRun := jobRuns[0]
-
-	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
-	jobRun = jobRuns[0]
+	assert.Equal(t, jrID, jobRun.ID)
 	Eventually(func() string {
 		assert.Nil(t, app.Store.One("ID", jobRun.ID, &jobRun))
 		return jobRun.Status
 	}).Should(Equal("completed"))
+	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
 	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
 	assert.Equal(t, rawTxResp, jobRun.TaskRuns[3].Result.Value())
 	assert.Equal(t, rawTxResp, jobRun.Result.Value())
 }
-
 
 func TestCreateInvalidTasks(t *testing.T) {
 	t.Parallel()
@@ -130,7 +152,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	jsonStr := LoadJSON("./fixture/create_invalid_jobs.json")
+	jsonStr := LoadJSON("./fixture/invalid_job.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
@@ -140,7 +162,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-	assert.Equal(t, `{"errors":["Cron: Empty spec string"]}`, string(body), "Repsonse should return JSON")
+	assert.Equal(t, `{"errors":["IdoNotExist is not a supported adapter type"]}`, string(body), "Repsonse should return JSON")
 }
 
 func TestCreateInvalidCron(t *testing.T) {
@@ -149,7 +171,7 @@ func TestCreateInvalidCron(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	jsonStr := LoadJSON("./fixture/create_invalid_cron.json")
+	jsonStr := LoadJSON("./fixture/invalid_cron.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
