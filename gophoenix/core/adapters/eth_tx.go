@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
-	"time"
 )
 
 type EthSignTx struct {
@@ -65,7 +64,7 @@ func (self *EthConfirmTx) Perform(input models.RunResult, store *store.Store) mo
 		if err != nil {
 			return models.RunResultWithError(err)
 		} else if receipt.TxHash.Hex() == "" {
-			time.Sleep(1000 * time.Millisecond)
+			return models.RunResultPending(input)
 		} else {
 			return models.RunResultWithValue(txid)
 		}

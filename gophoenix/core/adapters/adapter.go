@@ -34,6 +34,9 @@ func For(task models.Task) (ac Adapter, err error) {
 	case "EthSignAndSendTx":
 		ac = &EthSignAndSendTx{}
 		err = unmarshalOrEmpty(task.Params, ac)
+	case "NoOpPend":
+		ac = &NoOpPend{}
+		err = unmarshalOrEmpty(task.Params, ac)
 	case "NoOp":
 		ac = &NoOp{}
 		err = unmarshalOrEmpty(task.Params, ac)

@@ -9,7 +9,7 @@ import (
 
 func TestCreatingAdapterWithConfig(t *testing.T) {
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 	task := models.Task{Type: "NoOp"}
 	adapter, err := adapters.For(task)
 	adapter.Perform(models.RunResult{}, store)

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -9,7 +10,7 @@ import (
 
 func TestRetrievingJobRunsWithErrorsFromDB(t *testing.T) {
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	job := models.NewJob()
 	jr := job.NewRun()
@@ -23,3 +24,40 @@ func TestRetrievingJobRunsWithErrorsFromDB(t *testing.T) {
 	assert.True(t, run.Result.HasError())
 	assert.Equal(t, "bad idea", run.Result.Error())
 }
+
+
+func TestJobTransitionToPending(t *testing.T) {
+	t.Parallel()
+	store := NewStore()
+	defer CleanUpStore(store)
+
+	job := models.NewJob()
+	job.Tasks = []models.Task{models.Task{Type: "NoOpPend"}}
+
+	run := job.NewRun()
+	services.StartJob(run, store)
+
+	store.One("ID", run.ID, &run)
+	assert.Equal(t, "pending", run.Status)
+}
+
+func TestTaskRunsToRun(t *testing.T) {
+	t.Parallel()
+	store := NewStore()
+	defer CleanUpStore(store)
+
+	j := models.NewJob()
+	j.Tasks = []models.Task{
+		{Type: "NoOp"},
+		{Type: "NoOpPend"},
+		{Type: "NoOp"},
+	}
+	assert.Nil(t, store.SaveJob(j))
+	jr := j.NewRun()
+	assert.Equal(t, jr.TaskRuns, jr.TasksToRun())
+
+	jr, err := services.StartJob(jr, store)
+	assert.Nil(t, err)
+	assert.Equal(t, jr.TaskRuns[1:], jr.TasksToRun())
+}
+

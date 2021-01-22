@@ -12,7 +12,7 @@ func TestGracefulShutdown(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	var completed bool
 	store.Exiter = func(code int) {

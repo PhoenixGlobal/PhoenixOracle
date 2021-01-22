@@ -15,3 +15,12 @@ type TaskRun struct {
 	Status string
 	Result RunResult
 }
+
+func (self TaskRun) Completed() bool {
+	return self.Status == "completed"
+}
+
+func (self TaskRun) Errored() bool {
+	return self.Status == "errored"
+}
+

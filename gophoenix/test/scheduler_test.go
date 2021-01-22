@@ -12,7 +12,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	j := models.NewJob()
 	j.Initiators = []models.Initiator{{Type: "cron", Schedule: "* * * * *"}}
@@ -36,7 +36,7 @@ func TestLoadingSavedSchedules(t *testing.T) {
 func TestSchedulesWithEmptyCron(t *testing.T) {
 	RegisterTestingT(t)
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	j := models.NewJob()
 	_ = store.Save(&j)
@@ -56,7 +56,7 @@ func TestAddJob(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	sched := services.NewScheduler(store)
 	sched.Start()
@@ -79,7 +79,7 @@ func TestAddJobWhenStopped(t *testing.T) {
 	t.Parallel()
 	RegisterTestingT(t)
 	store := NewStore()
-	defer store.Close()
+	defer CleanUpStore(store)
 
 	sched := services.NewScheduler(store)
 

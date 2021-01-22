@@ -8,37 +8,43 @@ import (
 	"fmt"
 )
 
-func StartJob(run models.JobRun, store *store.Store) error {
+func StartJob(run models.JobRun, store *store.Store) (models.JobRun, error) {
 	run.Status = "in progress"
 	if err := store.Save(&run); err != nil {
-		return runJobError(run, err)
+		return run, runJobError(run, err)
 	}
 
 	logger.GetLogger().Infow("starting job", run.ForLogger()...)
 	var prevRun models.TaskRun
-	for i, taskRun := range run.TaskRuns {
+	for i, taskRun := range run.TasksToRun() {
 		prevRun = startTask(taskRun, prevRun.Result, store)
 		run.TaskRuns[i] = prevRun
 
 		err:= store.Save(&run); if err != nil {
 			fmt.Println("*****************************")
-			return runJobError(run, err)
-			fmt.Println("*****************************")
+			return run, runJobError(run, err)
 		}
-
-		if prevRun.Result.HasError() {
+		if prevRun.Result.Pending {
+			logger.Infow("Task pending", run.ForLogger("task", i, "result", prevRun.Result)...)
 			break
+		} else {
+			logger.Infow("Task finished", run.ForLogger("task", i, "result", prevRun.Result)...)
+			if prevRun.Result.HasError() {
+				break
+			}
 		}
 	}
 
 	run.Result = prevRun.Result
 	if run.Result.HasError() {
 		run.Status = "errored"
+	} else if run.Result.Pending {
+		run.Status = "pending"
 	} else {
 		run.Status = "completed"
 	}
 
-	return runJobError(run, store.Save(&run))
+	return run, runJobError(run, store.Save(&run))
 }
 
 func startTask(run models.TaskRun, input models.RunResult,store *store.Store) models.TaskRun {
@@ -54,6 +60,8 @@ func startTask(run models.TaskRun, input models.RunResult,store *store.Store) mo
 
 	if run.Result.HasError() {
 		run.Status = "errored"
+	} else if run.Result.Pending {
+		run.Status = "pending"
 	} else {
 		run.Status = "completed"
 	}
