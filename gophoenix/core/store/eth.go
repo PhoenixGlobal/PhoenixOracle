@@ -1,10 +1,10 @@
 package store
 
 import (
+	"PhoenixOracle/gophoenix/core/utils"
 	"encoding/json"
 	"github.com/ethereum/go-ethereum/accounts"
 	"strconv"
-	"strings"
 )
 
 type Eth struct {
@@ -21,10 +21,7 @@ func (self *Eth) GetNonce(account accounts.Account) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if strings.ToLower(result[0:2]) == "0x" {
-		result = result[2:]
-	}
-	return strconv.ParseUint(result, 16, 64)
+	return utils.HexToUint64(result)
 }
 
 func (self *Eth) SendRawTx(hex string) (string, error) {
@@ -38,6 +35,15 @@ func (self *Eth) GetTxReceipt(txid string) (TxReceipt, error) {
 	err := self.Call(&receipt, "eth_getTransactionReceipt", txid)
 	return receipt, err
 }
+
+func (self *Eth) BlockNumber() (uint64, error) {
+	result := ""
+	if err := self.Call(&result, "eth_blockNumber"); err != nil {
+		return 0, err
+	}
+	return utils.HexToUint64(result)
+}
+
 
 type TxReceipt struct {
 	BlockNumber uint64 `json:"blockNumber,string"`
