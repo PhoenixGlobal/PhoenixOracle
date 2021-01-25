@@ -2,11 +2,10 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/adapters"
+	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"bytes"
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
@@ -81,7 +80,6 @@ func TestCreateJobSchedulerIntegration(t *testing.T) {
 	assert.Equal(t, "cron", initr.Type)
 	assert.Equal(t, "* * * * *", string(initr.Schedule), "Wrong cron schedule saved")
 }
-
 func TestCreateJobIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
@@ -109,10 +107,10 @@ func TestCreateJobIntegration(t *testing.T) {
 	eth.Register("eth_getTransactionCount", `0x0100`)
 	txid := `0x83c52c31cd40a023728fbc21a570316acd4f90525f81f1d7c477fd958ffa467f`
 	eth.Register("eth_sendRawTransaction", txid)
-	eth.Register("eth_getTransactionReceipt", types.Receipt{})
-	eth.Register("eth_getTransactionReceipt", types.Receipt{TxHash: common.HexToHash(txid)})
+	eth.Register("eth_getTransactionReceipt", store.TxReceipt{})
+	eth.Register("eth_getTransactionReceipt", store.TxReceipt{TXID: txid})
 
-	jsonStr := LoadJSON("./fixture/job_integration.json")
+	jsonStr := LoadJSON("./fixure/job_integration.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	assert.Nil(t, err)
 	defer resp.Body.Close()

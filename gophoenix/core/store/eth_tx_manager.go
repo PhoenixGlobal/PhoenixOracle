@@ -49,7 +49,7 @@ func (self *EthTxManager) TxConfirmed(txid string) (bool, error) {
 	receipt, err := self.Eth.GetTxReceipt(txid)
 	if err != nil {
 		return false, err
-	} else if receipt.TxHash.Hex() == "" {
+	} else if receipt.Unconfirmed() {
 		return false, nil
 	}
 	return true, nil
