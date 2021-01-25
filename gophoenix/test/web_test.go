@@ -46,7 +46,7 @@ func TestCreateTasks(t *testing.T) {
 	assert.Equal(t, jsonParse.Path, []string{"last"})
 
 	adapter3,_ := adapters.For(j.Tasks[3])
-	signTx := adapter3.(*adapters.EthSignAndSendTx)
+	signTx := adapter3.(*adapters.EthTx)
 	assert.Equal(t, signTx.Address, "0x356a04bce728ba4c62a30294a55e6a8600a320b3")
 	assert.Equal(t, signTx.FunctionID, "12345679")
 
@@ -85,7 +85,10 @@ func TestCreateJobSchedulerIntegration(t *testing.T) {
 func TestCreateJobIntegration(t *testing.T) {
 	RegisterTestingT(t)
 
-	app := NewApplicationWithKeyStore()
+	config := NewConfig()
+	AddPrivateKey(config, "./fixture/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
+	app := NewApplicationWithConfig(config)
+	app.Store.KeyStore.Unlock("password")
 	eth := app.MockEthClient()
 	server := app.NewServer()
 	app.Start()
@@ -104,10 +107,10 @@ func TestCreateJobIntegration(t *testing.T) {
 		JSON(tickerResponse)
 
 	eth.Register("eth_getTransactionCount", `0x0100`)
-	rawTxResp := `0x6798b8110efe9c191a978d75954d0fbdd53bd866f7534fa0228802fa89d27b83`
-	eth.Register("eth_sendRawTransaction", rawTxResp)
+	txid := `0x83c52c31cd40a023728fbc21a570316acd4f90525f81f1d7c477fd958ffa467f`
+	eth.Register("eth_sendRawTransaction", txid)
 	eth.Register("eth_getTransactionReceipt", types.Receipt{})
-	eth.Register("eth_getTransactionReceipt", types.Receipt{TxHash: common.HexToHash(rawTxResp)})
+	eth.Register("eth_getTransactionReceipt", types.Receipt{TxHash: common.HexToHash(txid)})
 
 	jsonStr := LoadJSON("./fixture/job_integration.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
@@ -140,8 +143,8 @@ func TestCreateJobIntegration(t *testing.T) {
 	}).Should(Equal("completed"))
 	assert.Equal(t, tickerResponse, jobRun.TaskRuns[0].Result.Value())
 	assert.Equal(t, "10583.75", jobRun.TaskRuns[1].Result.Value())
-	assert.Equal(t, rawTxResp, jobRun.TaskRuns[3].Result.Value())
-	assert.Equal(t, rawTxResp, jobRun.Result.Value())
+	assert.Equal(t, txid, jobRun.TaskRuns[3].Result.Value())
+	assert.Equal(t, txid, jobRun.Result.Value())
 }
 
 func TestCreateInvalidTasks(t *testing.T) {

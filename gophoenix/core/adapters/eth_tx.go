@@ -3,39 +3,25 @@ package adapters
 import (
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
-	"bytes"
-	"fmt"
-	"github.com/ethereum/go-ethereum/common"
 )
 
-type EthSignTx struct {
+type EthTx struct {
 	Address    string `json:"address"`
 	FunctionID string `json:"functionID"`
 }
 
-func (self *EthSignTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
-	data := self.FunctionID + input.Value()
-	tx, err := store.Tx.NewSignedTx(self.Address, data)
-	fmt.Println("&&&&&&&&&&&&&&&&&&&&&")
-	if err != nil {
-		return models.RunResultWithError(err)
+func (self *EthTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
+	if !input.Pending {
+		data := self.FunctionID + input.Value()
+		tx, err := store.Tx.CreateTx(self.Address, data)
+		if err != nil {
+			return models.RunResultWithError(err)
+		}
+		txid := tx.Hash().String()
+		input = models.RunResultWithValue(txid)
 	}
-
-	buffer := new(bytes.Buffer)
-	if err := tx.EncodeRLP(buffer); err != nil {
-		return models.RunResultWithError(err)
-	}
-	return models.RunResultWithValue(common.Bytes2Hex(buffer.Bytes()))
-}
-
-type EthSendRawTx struct {}
-
-func (self *EthSendRawTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
-	result, err := store.Tx.SendRawTx(input.Value())
-	if err != nil {
-		return models.RunResultWithError(err)
-	}
-	return models.RunResultWithValue(result)
+	confirmer := &EthConfirmTx{}
+	return confirmer.Perform(input, store)
 }
 
 type EthConfirmTx struct {}
@@ -50,34 +36,3 @@ func (self *EthConfirmTx) Perform(input models.RunResult, store *store.Store) mo
 	}
 	return models.RunResultWithValue(txid)
 }
-
-type EthSignAndSendTx struct {
-	Address    string `json:"address"`
-	FunctionID string `json:"functionID"`
-}
-
-func (self *EthSignAndSendTx) Perform(input models.RunResult, store *store.Store) models.RunResult {
-	signer := &EthSignTx{
-		Address:     self.Address,
-		FunctionID:  self.FunctionID,
-	}
-	sender := &EthSendRawTx{
-	}
-	confirmer := &EthConfirmTx{
-	}
-	if !input.Pending {
-		signed := signer.Perform(input,store)
-		if signed.HasError() {
-			return signed
-		}
-		sent := sender.Perform(signed,store)
-		if sent.HasError() {
-			return sent
-		}
-		return confirmer.Perform(sent,store)
-	} else {
-		return confirmer.Perform(input, store)
-	}
-
-}
-
