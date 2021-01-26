@@ -38,3 +38,12 @@ func HexToUint64(hex string) (uint64, error) {
 func Uint64ToHex(i uint64) string {
 	return fmt.Sprintf("0x%x", i)
 }
+
+func EncodeTxToHex(tx *types.Transaction) (string, error) {
+	rlp := new(bytes.Buffer)
+	if err := tx.EncodeRLP(rlp); err != nil {
+		return "", err
+	}
+	return common.Bytes2Hex(rlp.Bytes()), nil
+}
+

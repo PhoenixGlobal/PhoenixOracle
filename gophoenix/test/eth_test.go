@@ -3,8 +3,6 @@ package test
 import (
 	strpkg "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/utils"
-	"bytes"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -15,7 +13,6 @@ func TestEthCreateTx(t *testing.T) {
 	store := app.Store
 	defer app.Stop()
 	assert.Nil(t, store.KeyStore.Unlock("password"))
-	config := store.Config
 	manager := store.Eth
 
 	to := "0xb70a511baC46ec6442aC6D598eaC327334e634dB"
@@ -27,46 +24,13 @@ func TestEthCreateTx(t *testing.T) {
 
 	tx, err := manager.CreateTx(to, data)
 	assert.Nil(t, err)
-	assert.Equal(t, uint64(256), tx.Nonce())
-	assert.Equal(t, common.FromHex(data), tx.Data())
-	assert.Equal(t, to, tx.To().Hex())
+	assert.Equal(t, uint64(256), tx.Nonce)
+	assert.Equal(t, data, tx.Data)
+	assert.Equal(t, to, tx.To)
 
-	signer := store.KeyStore.GetAccount().Address.String()
-	rlp := bytes.NewBuffer([]byte{})
-	assert.Nil(t, tx.EncodeRLP(rlp))
-	rlpHex := common.Bytes2Hex(rlp.Bytes())
-	sender, err := utils.SenderFromTxHex(rlpHex, uint64(config.ChainID))
-	assert.Equal(t, signer, sender.Hex())
-
-	assert.True(t, ethMock.AllCalled())
-}
-
-func TestEthNewSignedTx(t *testing.T) {
-	t.Parallel()
-	app := NewApplicationWithKeyStore()
-	store := app.Store
-	defer app.Stop()
-	assert.Nil(t, store.KeyStore.Unlock("password"))
-	config := store.Config
-	manager := store.Eth
-
-	data := "0000abcdef"
-	to := "0xb70a511baC46ec6442aC6D598eaC327334e634dB"
-	ethMock := app.MockEthClient()
-	ethMock.Register("eth_getTransactionCount", "0x0100") // 256
-
-	tx, err := manager.NewSignedTx(to, data)
-	assert.Nil(t, err)
-	assert.Equal(t, uint64(256), tx.Nonce())
-	assert.Equal(t, common.FromHex(data), tx.Data())
-	assert.Equal(t, to, tx.To().Hex())
-
-	signer := store.KeyStore.GetAccount().Address.String()
-	rlp := bytes.NewBuffer([]byte{})
-	assert.Nil(t, tx.EncodeRLP(rlp))
-	rlpHex := common.Bytes2Hex(rlp.Bytes())
-	sender, err := utils.SenderFromTxHex(rlpHex, uint64(config.ChainID))
-	assert.Equal(t, signer, sender.Hex())
+	assert.Nil(t, store.One("From", tx.From, tx))
+	assert.Equal(t, uint64(256), tx.Nonce)
+	assert.Equal(t, 1, len(tx.Attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }

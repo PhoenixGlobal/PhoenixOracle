@@ -33,6 +33,7 @@ type TestStore struct {
 const testRootDir = "./tmp/test"
 const testUsername = "testusername"
 const testPassword = "testpassword"
+const Password = "password"
 
 func init() {
 	dir, err := homedir.Expand(testRootDir)
@@ -44,7 +45,7 @@ func init() {
 		log.Println(err)
 	}
 
-	gomega.SetDefaultEventuallyTimeout(2 * time.Second)
+	gomega.SetDefaultEventuallyTimeout(3 * time.Second)
 }
 
 
@@ -169,14 +170,14 @@ func (self *EthMock) AllCalled() bool {
 	return len(self.Responses) == 0
 }
 
-func RemoveIndex(s []MockResponse, index int) []MockResponse {
+func copyWithoutIndex(s []MockResponse, index int) []MockResponse {
 	return append(s[:index], s[index+1:]...)
 }
 
 func (self *EthMock) Call(result interface{}, method string, args ...interface{}) error {
-	for i, resp := range self.Responses[:] {
+	for i, resp := range self.Responses {
 		if resp.methodName == method {
-			self.Responses = RemoveIndex(self.Responses, i)
+			self.Responses = copyWithoutIndex(self.Responses, i)
 			if resp.hasError {
 				return fmt.Errorf(resp.errMsg)
 			} else {

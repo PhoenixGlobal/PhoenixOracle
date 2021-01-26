@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
+	"PhoenixOracle/gophoenix/core/utils"
 	"bytes"
 	"encoding/json"
 	. "github.com/onsi/gomega"
@@ -86,13 +87,13 @@ func TestCreateJobIntegration(t *testing.T) {
 	config := NewConfig()
 	AddPrivateKey(config, "./fixture/3cb8e3fd9d27e39a5e9e6852b0e96160061fd4ea.json")
 	app := NewApplicationWithConfig(config)
-	app.Store.KeyStore.Unlock("password")
+	app.Store.KeyStore.Unlock(Password)
 	eth := app.MockEthClient()
 	server := app.NewServer()
 	app.Start()
 	defer app.Stop()
 
-	err := app.Store.KeyStore.Unlock("password")
+	err := app.Store.KeyStore.Unlock(Password)
 	assert.Nil(t, err)
 
 	defer CloseGock(t)
@@ -106,11 +107,15 @@ func TestCreateJobIntegration(t *testing.T) {
 
 	eth.Register("eth_getTransactionCount", `0x0100`)
 	txid := `0x83c52c31cd40a023728fbc21a570316acd4f90525f81f1d7c477fd958ffa467f`
+	confed := uint64(23456)
 	eth.Register("eth_sendRawTransaction", txid)
 	eth.Register("eth_getTransactionReceipt", store.TxReceipt{})
-	eth.Register("eth_getTransactionReceipt", store.TxReceipt{TXID: txid})
+	eth.Register("eth_getTransactionReceipt", store.TxReceipt{TXID: txid, BlockNumber: confed})
+	eth.Register("eth_getTransactionReceipt", store.TxReceipt{TXID: txid, BlockNumber: confed})
+	eth.Register("eth_blockNumber", utils.Uint64ToHex(confed+config.EthConfMin-1))
+	eth.Register("eth_blockNumber", utils.Uint64ToHex(confed+config.EthConfMin))
 
-	jsonStr := LoadJSON("./fixure/job_integration.json")
+	jsonStr := LoadJSON("./fixture/job_integration.json")
 	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	assert.Nil(t, err)
 	defer resp.Body.Close()

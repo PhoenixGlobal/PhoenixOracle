@@ -1,6 +1,8 @@
 package store
 
 import (
+	"PhoenixOracle/gophoenix/core/store/models"
+	"PhoenixOracle/gophoenix/core/utils"
 	"bytes"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -11,38 +13,59 @@ type Eth struct {
 	*EthClient
 	KeyStore *KeyStore
 	Config   Config
+	ORM      *models.ORM
 }
 
-func (self *Eth) CreateTx(to, data string) (*types.Transaction, error) {
-	tx, err := self.NewSignedTx(to, data)
-	if err != nil {
-		return tx, err
-	}
-	hex, err := encodeTxToHex(tx)
-	if err != nil {
-		return tx, err
-	}
-	if _, err = self.SendRawTx(hex); err != nil {
-		return tx, err
-	}
-	return tx, nil
-}
-
-func (self *Eth) NewSignedTx(to, data string) (*types.Transaction, error) {
+func (self *Eth) CreateTx(to, data string) (*models.EthTx, error) {
 	account := self.KeyStore.GetAccount()
 	nonce, err := self.GetNonce(account)
 	if err != nil {
 		return nil, err
 	}
-	tx := types.NewTransaction(
+	txr, err := self.ORM.CreateEthTx(
+		account.Address.String(),
 		nonce,
-		common.HexToAddress(to),
+		to,
+		data,
 		big.NewInt(0),
 		500000,
 		big.NewInt(20000000000),
-		common.FromHex(data),
 	)
-	return self.KeyStore.SignTx(tx, self.Config.ChainID)
+	if err != nil {
+		return txr, err
+	}
+
+	if err = self.createAttempt(txr); err != nil {
+		return txr, err
+	}
+
+	return txr, nil
+}
+
+func (self *Eth) createAttempt(txr *models.EthTx) error {
+	tx := txr.Signable()
+	tx, err := self.KeyStore.SignTx(tx, self.Config.ChainID)
+	if err != nil {
+		return err
+	}
+	if _, err = txr.NewAttempt(tx); err != nil {
+		return err
+	}
+	if err = self.sendTransaction(tx); err != nil {
+		return err
+	}
+	return self.ORM.Save(txr)
+}
+
+func (self *Eth) sendTransaction(tx *types.Transaction) error {
+	hex, err := utils.EncodeTxToHex(tx)
+	if err != nil {
+		return err
+	}
+	if _, err = self.SendRawTx(hex); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (self *Eth) TxConfirmed(txid string) (bool, error) {

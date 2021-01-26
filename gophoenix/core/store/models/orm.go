@@ -4,6 +4,7 @@ import (
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/q"
 	"log"
+	"math/big"
 	"path"
 	"reflect"
 )
@@ -93,3 +94,20 @@ func (self *ORM) PendingJobRuns() ([]JobRun, error) {
 	err := self.Where("Status", "pending", &runs)
 	return runs, err
 }
+
+func (self *ORM) CreateEthTx(
+	from string, nonce uint64, to string, data string, value *big.Int,
+	gasLimit uint64, gasPrice *big.Int,
+) (*EthTx, error) {
+	tx := EthTx{
+		From:     from,
+		To:       to,
+		Nonce:    nonce,
+		Data:     data,
+		Value:    value,
+		GasLimit: gasLimit,
+		GasPrice: gasPrice,
+	}
+	return &tx, self.Save(&tx)
+}
+

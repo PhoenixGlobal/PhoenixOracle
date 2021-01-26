@@ -39,6 +39,7 @@ func StartJob(run models.JobRun, store *store.Store) (models.JobRun, error) {
 
 	run.Result = prevRun.Result
 	if run.Result.HasError() {
+		fmt.Println(run.Result.ErrorMessage)
 		run.Status = "errored"
 	} else if run.Result.Pending {
 		run.Status = "pending"

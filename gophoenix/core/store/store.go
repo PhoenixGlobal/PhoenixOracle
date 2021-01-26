@@ -38,6 +38,7 @@ func NewStore(config Config) *Store {
 			Config:    config,
 			EthClient: &EthClient{ethrpc},
 			KeyStore:  keyStore,
+			ORM:       orm,
 		},
 	}
 }
