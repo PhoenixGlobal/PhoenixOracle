@@ -2,6 +2,7 @@ package test
 
 import (
 	strpkg "PhoenixOracle/gophoenix/core/store"
+	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -16,20 +17,28 @@ func TestEthCreateTx(t *testing.T) {
 
 	to := "0xb70a511baC46ec6442aC6D598eaC327334e634dB"
 	data := "0000abcdef"
-	txid := "0x86300ee06a57eb27fbd8a6d5380783d4f8cb7210747689fe452e40f049d3de08"
+	hash := "0x86300ee06a57eb27fbd8a6d5380783d4f8cb7210747689fe452e40f049d3de08"
+	sentAt := uint64(23456)
+	nonce := uint64(256)
 	ethMock := app.MockEthClient()
-	ethMock.Register("eth_getTransactionCount", "0x0100") // 256
-	ethMock.Register("eth_sendRawTransaction", txid)
+	ethMock.Register("eth_getTransactionCount", utils.Uint64ToHex(nonce)) // 256
+	ethMock.Register("eth_sendRawTransaction", hash)
+	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt))
 
-	tx, err := manager.CreateTx(to, data)
+	a, err := manager.CreateTx(to, data)
 	assert.Nil(t, err)
-	assert.Equal(t, uint64(256), tx.Nonce)
+	tx := models.EthTx{}
+	assert.Nil(t, store.One("ID", a.EthTxID, &tx))
+	assert.Nil(t, err)
+	assert.Equal(t, nonce, tx.Nonce)
 	assert.Equal(t, data, tx.Data)
 	assert.Equal(t, to, tx.To)
 
-	assert.Nil(t, store.One("From", tx.From, tx))
-	assert.Equal(t, uint64(256), tx.Nonce)
-	assert.Equal(t, 1, len(tx.Attempts))
+	assert.Nil(t, store.One("From", tx.From, &tx))
+	assert.Equal(t, nonce, tx.Nonce)
+	attempts, err := store.AttemptsFor(tx.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }
@@ -48,14 +57,18 @@ func TestEthEnsureTxConfirmedBeforeThreshold(t *testing.T) {
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthGasBumpThreshold-1))
 
-	txr := NewEthTx(from, sentAt)
-	assert.Nil(t, store.SaveTx(txr))
+	txr := CreateEthTxAndAttempt(store,from, sentAt)
+	attempts, err := store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	a := attempts[0]
 
-	confirmed, err := eth.EnsureTxConfirmed(txr.TxID())
+	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)
 	assert.False(t, confirmed)
 	assert.Nil(t, store.One("ID", txr.ID, txr))
-	assert.Equal(t, 1, len(txr.Attempts))
+	attempts, err = store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }
@@ -73,16 +86,20 @@ func TestEthEnsureTxConfirmedAtThreshold(t *testing.T) {
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthGasBumpThreshold))
-	ethMock.Register("eth_sendRawTransaction", NewTxID())
+	ethMock.Register("eth_sendRawTransaction", NewTxHash())
 
-	txr := NewEthTx(from, sentAt)
-	assert.Nil(t, store.SaveTx(txr))
+	txr := CreateEthTxAndAttempt(store, from, sentAt)
+	attempts, err := store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	a := attempts[0]
 
-	confirmed, err := eth.EnsureTxConfirmed(txr.TxID())
+	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)
 	assert.False(t, confirmed)
 	assert.Nil(t, store.One("ID", txr.ID, txr))
-	assert.Equal(t, 2, len(txr.Attempts))
+	attempts, err = store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }
@@ -100,19 +117,22 @@ func TestEthEnsureTxConfirmedWhenSafe(t *testing.T) {
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{
-		TxID:        NewTxID(),
+		Hash:        NewTxHash(),
 		BlockNumber: sentAt,
 	})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthMinConfirmations))
 
-	txr := NewEthTx(from, sentAt)
-	assert.Nil(t, store.SaveTx(txr))
+	txr := CreateEthTxAndAttempt(store, from, sentAt)
+	a := models.EthTxAttempt{}
+	assert.Nil(t, store.One("EthTxID", txr.ID, &a))
 
-	confirmed, err := eth.EnsureTxConfirmed(txr.TxID())
+	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)
 	assert.True(t, confirmed)
 	assert.Nil(t, store.One("ID", txr.ID, txr))
-	assert.Equal(t, 1, len(txr.Attempts))
+	attempts, err := store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }
@@ -130,19 +150,22 @@ func TestEthEnsureTxConfirmedWhenWithConfsButNotSafe(t *testing.T) {
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{
-		TxID:        NewTxID(),
+		Hash:        NewTxHash(),
 		BlockNumber: sentAt,
 	})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthMinConfirmations-1))
 
-	txr := NewEthTx(from, sentAt)
-	assert.Nil(t, store.SaveTx(txr))
+	txr := CreateEthTxAndAttempt(store, from, sentAt)
+	a := models.EthTxAttempt{}
+	assert.Nil(t, store.One("EthTxID", txr.ID, &a))
 
-	confirmed, err := eth.EnsureTxConfirmed(txr.TxID())
+	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)
 	assert.False(t, confirmed)
 	assert.Nil(t, store.One("ID", txr.ID, txr))
-	assert.Equal(t, 1, len(txr.Attempts))
+	attempts, err := store.AttemptsFor(txr.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(attempts))
 
 	assert.True(t, ethMock.AllCalled())
 }
