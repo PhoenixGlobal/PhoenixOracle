@@ -8,14 +8,13 @@ import (
 )
 
 type EthTx struct {
-	ID       uint64 `storm:"id,increment"`
+	ID       uint64 `storm:"id,increment,index"`
 	From     string
 	To       string
 	Data     string
 	Nonce    uint64
 	Value    *big.Int
 	GasLimit uint64
-	GasPrice *big.Int
 	Attempts []*EthTxAttempt `storm:"inline"`
 }
 
@@ -39,21 +38,27 @@ func (self *EthTx) TxID() string {
 	return self.Attempts[len(self.Attempts)-1].TxID
 }
 
-func (self *EthTx) Signable() *types.Transaction {
+func (self *EthTx) GasPrice() *big.Int {
+	return self.Attempts[len(self.Attempts)-1].GasPrice
+}
+
+func (self *EthTx) Signable(gasPrice *big.Int) *types.Transaction {
 	return types.NewTransaction(
 		self.Nonce,
 		common.HexToAddress(self.To),
 		self.Value,
 		self.GasLimit,
-		self.GasPrice,
+		gasPrice,
 		common.FromHex(self.Data),
 	)
 }
 
 type EthTxAttempt struct {
-	TxID      string
+	TxID      string `storm:"id,index,unique"`
+	EthTxID   uint64 `storm:"index"`
 	GasPrice  *big.Int
 	Confirmed bool
 	Hex       string
+	SentAt    uint64
 }
 

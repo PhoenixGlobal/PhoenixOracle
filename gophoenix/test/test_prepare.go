@@ -6,9 +6,11 @@ import (
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/web"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
 	"github.com/onsi/gomega"
@@ -17,6 +19,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -85,6 +88,10 @@ func NewConfig() store.Config {
 		BasicAuthPassword: testPassword,
 		EthereumURL:       "https://example.com/api",
 		ChainID:           3,
+		EthMinConfirmations: 6,
+		EthGasBumpWei:      big.NewInt(5000000000),
+		EthGasBumpThreshold: 3,
+		EthGasPriceDefault:  big.NewInt(20000000000),
 		PollingSchedule:   "* * * * * *",
 	}
 }
@@ -104,8 +111,10 @@ func NewApplicationWithConfig(config store.Config) *TestApplication {
 
 func NewApplicationWithKeyStore() *TestApplication {
 	app := NewApplication()
-	_, err := app.Store.KeyStore.NewAccount("password")
-	if err != nil {
+	if _, err := app.Store.KeyStore.NewAccount(Password); err != nil {
+		logger.Fatal(err)
+	}
+	if err := app.Store.KeyStore.Unlock(Password); err != nil {
 		logger.Fatal(err)
 	}
 	return app
@@ -217,7 +226,7 @@ func LoadJSON(file string) []byte {
 	return content
 }
 
-func CopyFile(src, dst string) {
+func copyFile(src, dst string) {
 	from, err := os.Open(src)
 	if err != nil {
 		log.Fatal(err)
@@ -243,7 +252,7 @@ func AddPrivateKey(config store.Config, src string) {
 	}
 
 	dst := config.KeysDir() + "/testwallet.json"
-	CopyFile(src, dst)
+	copyFile(src, dst)
 }
 
 func TimeParse(s string) time.Time {
@@ -287,4 +296,32 @@ func NewJobWithWebInitiator() models.Job {
 	j := NewJob()
 	j.Initiators = []models.Initiator{{Type: "web"}}
 	return j
+}
+
+func NewEthTx(from string, sentAt uint64) *models.EthTx {
+	return &models.EthTx{
+		From:     from,
+		Nonce:    0,
+		Data:     "deadbeef",
+		Value:    big.NewInt(0),
+		GasLimit: uint64(250000),
+		Attempts: []*models.EthTxAttempt{&models.EthTxAttempt{
+			TxID:     NewTxID(),
+			GasPrice: big.NewInt(20000000000),
+			Hex:      "0x0000",
+			SentAt:   sentAt,
+		}},
+	}
+}
+
+func NewTxID() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return hexutil.Encode(b)
+}
+
+func NewEthAddress() string {
+	b := make([]byte, 20)
+	rand.Read(b)
+	return hexutil.Encode(b)
 }
