@@ -14,7 +14,7 @@ contract('phoenixClient', () => {
             assert.equal(1, value1);
             var value = web3.utils.toHex("hellp apex");
             console.log(value); // "1000000000000000000"
-            // console.log(testApi.seconds(12));
+            console.log(testApi.seconds(12));
             //assert.equal(web3.utils.toHex("hellp apex"), web3.utils)
         });
     });
