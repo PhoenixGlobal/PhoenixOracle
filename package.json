@@ -23,8 +23,11 @@
   },
   "homepage": "https://github.com/PhoenixGlobal/PhoenixOracle#readme",
   "dependencies": {
-    "truffle-contract": "^4.0.31",
     "bignumber.js": "^9.0.1",
+    "ethjs": "^0.4.0",
     "moment": "^2.29.1"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.1"
   }
 }

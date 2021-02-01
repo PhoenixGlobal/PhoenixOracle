@@ -1,0 +1,19 @@
+{"level":"info","ts":1611296113.127,"caller":"services/job_runner.go:17","msg":"starting job","job":"a8dfd691-c140-42c3-962a-2d41486768c4","run":"9864aaca-8ebb-4e16-abc3-b5c1810995bd","status":"in progress"}
+{"level":"info","ts":1611296113.293,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"a8dfd691-c140-42c3-962a-2d41486768c4","run":"9864aaca-8ebb-4e16-abc3-b5c1810995bd","status":"in progress"}
+{"level":"info","ts":1611297240.109,"caller":"services/job_runner.go:17","msg":"starting job","job":"8b2da50f-781c-4662-b84d-489023c8a84e","run":"87faa332-3fa6-4511-a93e-dc7ad8f9d743","status":"in progress"}
+{"level":"panic","ts":1611297240.109,"caller":"services/scheduler.go:50","msg":"StartJob#8b2da50f-781c-4662-b84d-489023c8a84e: database not open"}
+{"level":"info","ts":1611297501.0579998,"caller":"services/job_runner.go:17","msg":"starting job","job":"6e6b028f-d8c1-4b8a-8883-b3f36e501d72","run":"ae1077c6-15e0-4816-9d85-cd279891656b","status":"in progress"}
+{"level":"panic","ts":1611297501.059,"caller":"services/scheduler.go:50","msg":"StartJob#6e6b028f-d8c1-4b8a-8883-b3f36e501d72: database not open"}
+{"level":"info","ts":1611297646.0819998,"caller":"services/job_runner.go:17","msg":"starting job","job":"133fd89e-bc1b-4e7f-b69b-2992eeb89c42","run":"2bad9509-19c7-4589-8619-3e2edd0dd0dd","status":"in progress"}
+{"level":"panic","ts":1611297646.0830002,"caller":"services/scheduler.go:50","msg":"StartJob#133fd89e-bc1b-4e7f-b69b-2992eeb89c42: database not open"}
+{"level":"info","ts":1611297681.062,"caller":"services/job_runner.go:17","msg":"starting job","job":"2a8d4aa5-ccea-46f1-98bd-7991674fb925","run":"db535562-0e5a-4089-91b0-8e859bcb322b","status":"in progress"}
+{"level":"info","ts":1611297681.106,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"2a8d4aa5-ccea-46f1-98bd-7991674fb925","run":"db535562-0e5a-4089-91b0-8e859bcb322b","status":"in progress"}
+{"level":"info","ts":1611297841.144,"caller":"services/job_runner.go:17","msg":"starting job","job":"463a12d1-a3e0-464d-b61c-4e54187024cb","run":"82dd3313-798e-40f5-ac0d-c6d1fea5f804","status":"in progress"}
+{"level":"info","ts":1611297841.1990001,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"463a12d1-a3e0-464d-b61c-4e54187024cb","run":"82dd3313-798e-40f5-ac0d-c6d1fea5f804","status":"in progress"}
+{"level":"info","ts":1611647489.302,"caller":"services/job_runner.go:17","msg":"starting job","job":"086146e2-3fc9-42eb-80d0-2fbd3a3358d4","run":"a4ccd57f-d160-4fe1-9931-88554c7fee01","status":"in progress"}
+{"level":"info","ts":1611647489.386,"caller":"logger/logger.go:84","msg":"Task pending","task":0,"result":"","job":"086146e2-3fc9-42eb-80d0-2fbd3a3358d4","run":"a4ccd57f-d160-4fe1-9931-88554c7fee01","status":"in progress"}
+{"level":"info","ts":1611647499.98,"caller":"services/job_runner.go:17","msg":"starting job","job":"0ed2f0a2-3389-4681-9be2-b33c545c9eca","run":"759acf62-7fb7-499a-a7ea-84cb1c736c3c","status":"in progress"}
+{"level":"info","ts":1611647500.386,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"0ed2f0a2-3389-4681-9be2-b33c545c9eca","run":"759acf62-7fb7-499a-a7ea-84cb1c736c3c","status":"in progress"}
+{"level":"info","ts":1611647500.6030002,"caller":"logger/logger.go:84","msg":"Task pending","task":1,"result":"","job":"0ed2f0a2-3389-4681-9be2-b33c545c9eca","run":"759acf62-7fb7-499a-a7ea-84cb1c736c3c","status":"in progress"}
+{"level":"info","ts":1611647694.09,"caller":"services/job_runner.go:17","msg":"starting job","job":"1e4a8413-7b52-4421-8a3d-641c67410270","run":"53e5f771-b57a-4acf-9d72-5a551daead7a","status":"in progress"}
+{"level":"info","ts":1611647694.145,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"1e4a8413-7b52-4421-8a3d-641c67410270","run":"53e5f771-b57a-4acf-9d72-5a551daead7a","status":"in progress"}

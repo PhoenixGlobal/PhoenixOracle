@@ -3,9 +3,14 @@ pragma solidity ^0.5.0;
 import "./zeppelin/Ownable.sol";
 
 contract phoenixClient is Ownable{
-    bytes32 public value;
-    uint public value1;
-    uint public nonce;
+
+    struct Callback {
+        address addr;
+        bytes4 fid;
+    }
+
+    uint private nonce;
+    mapping(uint => Callback) private callbacks;
 
     event Request(
         uint indexed nonce,
@@ -13,21 +18,26 @@ contract phoenixClient is Ownable{
         bytes4 indexed fid
     );
 
-    constructor () public{
-        value = "hello apex";
-        value1 = 1;
-    }
-
-    function setValue(bytes32 newValue) public {
-        value = newValue;
-    }
-
-    function setValue1(uint newValue) public {
-        value1 = newValue;
-    }
-
-    function requestData(address _address, bytes4 _fid) public{
-        emit Request(nonce, _address, _fid);
+    function requestData(address _callbackAddress, bytes4 _callbackFID) public {
+        Callback memory cb = Callback(_callbackAddress, _callbackFID);
+        callbacks[nonce] = cb;
+        emit Request(nonce, cb.addr, cb.fid);
         nonce += 1;
+    }
+
+    function fulfillData(uint _nonce, bytes32 _data)
+        public
+        onlyOwner
+        hasNonce(_nonce)
+    {
+        Callback memory cb = callbacks[_nonce];
+        (bool success, ) = cb.addr.call(abi.encode(cb.fid, _data));
+        require(success);
+        delete callbacks[_nonce];
+    }
+
+    modifier hasNonce(uint _nonce) {
+        require(callbacks[_nonce].addr != address(0));
+        _;
     }
 }

@@ -1,35 +1,45 @@
+
 BigNumber = require('bignumber.js');
 moment = require('moment');
-// const web3 = require("web3")
-var Web3 = require('web3');
-var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:9545"))
-const eth = web3.eth;
 
-// before(async function () {
-//     var accounts = await eth.accounts;
-//     // var Accounts = accounts.slice(1);
-// });
-//
-// var Eth = function sendEth(method, params) {
-//     params = params || [];
-//
-//     return new Promise((resolve, reject) => {
-//         web3.currentProvider.sendAsync({
-//             jsonrpc: "2.0",
-//             method: method,
-//             params: params || [],
-//             id: new Date().getTime()
-//         }, function sendEthResponse(error, response) {
-//             if (error) {
-//                 reject(error);
-//             } else {
-//                 resolve(response.result);
-//             };
-//         }, () => {}, () => {});
-//     });
-// };
-//
-//   const emptyAddress = '0x0000000000000000000000000000000000000000';
+(() => {
+
+  eth = web3.eth;
+  // console.log("111111111111111111")
+  // console.log(eth)
+
+  before(async function () {
+    accounts = await eth.getAccounts();
+    console.log("hhhhhhhhhhhhhh")
+    console.log(accounts)
+    Accounts = accounts.slice(1);
+    //
+    // oracle = Accounts[0];
+    // stranger = Accounts[1];
+    // consumer = Accounts[2];
+  });
+
+  Eth = function sendEth(method, params) {
+    params = params || [];
+
+    return new Promise((resolve, reject) => {
+      web3.currentProvider.sendAsync({
+        jsonrpc: "2.0",
+        method: method,
+        params: params || [],
+        id: new Date().getTime()
+      }, function sendEthResponse(error, response) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(response.result);
+        };
+      }, () => {}, () => {});
+    });
+  };
+
+  exports.emptyAddress = '0x0000000000000000000000000000000000000000';
+
   exports.sealBlock = async function sealBlock() {
     return Eth('evm_mine');
   };
@@ -104,7 +114,7 @@ const eth = web3.eth;
     return web3.toDecimal(latestBlock.timestamp);
   };
 
-  exports.fastForwardTo =  async function fastForwardTo(target) {
+  exports.fastForwardTo = async function fastForwardTo(target) {
     let now = await getLatestTimestamp();
     assert.isAbove(target, now, "Cannot fast forward to the past");
     let difference = target - now;
@@ -112,7 +122,7 @@ const eth = web3.eth;
     await sealBlock();
   };
 
-  exports.getEvents =  function getEvents(contract) {
+  exports.getEvents = function getEvents(contract) {
     return new Promise((resolve, reject) => {
       contract.allEvents().get((error, events) => {
         if (error) {
@@ -125,7 +135,7 @@ const eth = web3.eth;
     });
   };
 
-  exports.eventsOfType =  function eventsOfType(events, type) {
+  exports.eventsOfType = function eventsOfType(events, type) {
     let filteredEvents = [];
     for (event of events) {
       if (event.event === type) filteredEvents.push(event);
@@ -144,17 +154,17 @@ const eth = web3.eth;
 
   exports.assertActionThrows = function assertActionThrows(action) {
     return Promise.resolve().then(action)
-      .catch(error => {
-        assert(error, "Expected an error to be raised");
-        assert(error.message, "Expected an error to be raised");
-        return error.message;
-      })
-      .then(errorMessage => {
-        assert(errorMessage, "Expected an error to be raised");
-        assert.include(errorMessage, "invalid opcode", 'expected error message to include "invalid JUMP"');
-        // see https://github.com/ethereumjs/testrpc/issues/39
-        // for why the "invalid JUMP" is the throw related error when using TestRPC
-      })
+        .catch(error => {
+          assert(error, "Expected an error to be raised");
+          assert(error.message, "Expected an error to be raised");
+          return error.message;
+        })
+        .then(errorMessage => {
+          assert(errorMessage, "Expected an error to be raised");
+          assert.include(errorMessage, "invalid opcode", 'expected error message to include "invalid JUMP"');
+          // see https://github.com/ethereumjs/testrpc/issues/39
+          // for why the "invalid JUMP" is the throw related error when using TestRPC
+        })
   };
 
   exports.encodeUint256 = function encodeUint256(int) {
@@ -191,6 +201,8 @@ const eth = web3.eth;
     }
   };
 
-  function functionID(signature) {
+  exports.functionID = function functionID(signature) {
     return web3.sha3(signature).slice(2).slice(0, 8);
   };
+
+})();
