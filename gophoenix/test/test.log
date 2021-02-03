@@ -510,3 +510,5 @@
 {"level":"info","ts":1612320834.539,"msg":"[Gracefully exiting...]"}
 {"level":"info","ts":1612321242.956,"msg":"Web request","method":"POST","status":401,"path":"/jobs","query":"","body":"{\r\n  \"initiators\": [ { \"type\": \"runAt\", \"time\": \"2018-01-08T18:12:01.103Z\" } ],\r\n  \"tasks\": [ { \"type\": \"NoOp\" } ]\r\n}\r\n","clientIP":"127.0.0.1","comment":"","servedAt":"2021/02/03 - 11:00:42","latency":"0s"}
 {"level":"info","ts":1612321242.956,"msg":"[Gracefully exiting...]"}
+{"level":"info","ts":1612322637.0579998,"msg":"Web request","method":"GET","status":401,"path":"/v2/jobs","query":"","body":"","clientIP":"127.0.0.1","comment":"","servedAt":"2021/02/03 - 11:23:57","latency":"0s"}
+{"level":"info","ts":1612322637.08,"msg":"[Gracefully exiting...]"}

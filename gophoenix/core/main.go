@@ -1,6 +1,7 @@
 package main
 
 import (
+	"PhoenixOracle/gophoenix/command"
 	"PhoenixOracle/gophoenix/core/logger"
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store"
@@ -12,6 +13,7 @@ import (
 )
 
 func main() {
+	client := command.Client{os.Stdout}
 	app := cli.NewApp()
 	app.Usage = "CLI for Chainlink"
 	app.Commands = []cli.Command{
@@ -19,19 +21,19 @@ func main() {
 			Name:    "node",
 			Aliases: []string{"n"},
 			Usage:   "Run the chainlink node",
-			Action:  runNode,
+			Action:  client.RunNode,
 		},
 		{
 			Name:    "jobs",
 			Aliases: []string{"j"},
 			Usage:   "Get all jobs",
-			Action:  getJobs,
+			Action:  client.GetJobs,
 		},
 		{
 			Name:    "show",
 			Aliases: []string{"s"},
 			Usage:   "Show a specific job",
-			Action:  showJob,
+			Action:  client.ShowJob,
 		},
 	}
 	app.Run(os.Args)
@@ -68,7 +70,7 @@ func getJobs(c *cli.Context) error {
 		return cliError(err)
 	}
 	defer resp.Body.Close()
-	return cliError(utils.PrettyPrintJSON(resp.Body))
+	return cliError(utils.FormatJSON(resp.Body))
 }
 
 func showJob(c *cli.Context) error {
@@ -86,5 +88,5 @@ func showJob(c *cli.Context) error {
 		return cliError(err)
 	}
 	defer resp.Body.Close()
-	return cliError(utils.PrettyPrintJSON(resp.Body))
+	return cliError(utils.FormatJSON(resp.Body))
 }

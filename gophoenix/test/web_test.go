@@ -23,7 +23,7 @@ func TestCreateTasks(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/job_integration.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
@@ -64,7 +64,7 @@ func TestCreateJobSchedulerIntegration(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/scheduler_job.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
@@ -116,12 +116,12 @@ func TestCreateJobIntegration(t *testing.T) {
 	eth.Register("eth_getTransactionReceipt", store.TxReceipt{Hash: hash, BlockNumber: confirmed})
 
 	jsonStr := LoadJSON("./fixture/job_integration.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	assert.Nil(t, err)
 	defer resp.Body.Close()
 	jobID := JobJSONFromResponse(resp.Body).ID
 
-	url := server.URL + "/jobs/" + jobID + "/runs"
+	url := server.URL + "/v2/jobs/" + jobID + "/runs"
 	resp, err = BasicAuthPost(url, "application/json", &bytes.Buffer{})
 	assert.Nil(t, err)
 	jrID := JobJSONFromResponse(resp.Body).ID
@@ -159,7 +159,7 @@ func TestCreateJobWithRunAtIntegration(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/run_at_jobs.json")
-	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, _ := BasicAuthPost(server.URL+"v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp.Body)
 	defer resp.Body.Close()
 
@@ -189,7 +189,7 @@ func TestCreateInvalidTasks(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/invalid_job.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,7 +208,7 @@ func TestCreateInvalidCron(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/invalid_cron.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -230,7 +230,7 @@ func TestShowJobs(t *testing.T) {
 
 	app.Store.Save(&j)
 
-	resp, err := BasicAuthGet(server.URL + "/jobs/" + j.ID)
+	resp, err := BasicAuthGet(server.URL + "/v2/jobs/" + j.ID)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, resp.StatusCode, "Response should be successful")
 	b, err := ioutil.ReadAll(resp.Body)
@@ -246,7 +246,7 @@ func TestShowNotFoundJobs(t *testing.T) {
 	app := NewApplication()
 	server := app.NewServer()
 	defer app.Stop()
-	resp, err := BasicAuthGet(server.URL + "/jobs/" + "garbage")
+	resp, err := BasicAuthGet(server.URL + "/v2/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 404, resp.StatusCode, "Response should be not found")
 }
@@ -257,7 +257,7 @@ func TestShowJobUnauthenticated(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	resp, err := http.Get(server.URL + "/jobs/" + "garbage")
+	resp, err := http.Get(server.URL + "/v2/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 401, resp.StatusCode, "Response should be forbidden")
 }

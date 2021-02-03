@@ -17,14 +17,17 @@ func Router(app *services.Application) *gin.Engine {
 	config := app.Store.Config
 	basicAuth := gin.BasicAuth(gin.Accounts{config.BasicAuthUsername: config.BasicAuthPassword})
 	engine.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
-	t := controllers.JobsController{app}
-	engine.GET("/jobs", t.Index)
-	engine.POST("/jobs", t.Create)
-	engine.GET("/jobs/:id", t.Show)
+	v2 := engine.Group("/v2")
+	{
+		t := controllers.JobsController{app}
+		v2.GET("/jobs", t.Index)
+		v2.POST("/jobs", t.Create)
+		v2.GET("/jobs/:id", t.Show)
 
-	jr := controllers.JobRunsController{app}
-	engine.GET("/jobs/:id/runs", jr.Index)
-	engine.POST("/jobs/:jobID/runs", jr.Create)
+		jr := controllers.JobRunsController{app}
+		v2.GET("/jobs/:id/runs", jr.Index)
+		v2.POST("/jobs/:jobID/runs", jr.Create)
+	}
 	return engine
 }
 

@@ -27,6 +27,8 @@ github.com/btcsuite/btcd/btcec
 # github.com/caarlos0/env v3.5.0+incompatible
 ## explicit
 github.com/caarlos0/env
+# github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
+github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
@@ -120,17 +122,24 @@ github.com/pborman/uuid
 github.com/pmezard/go-difflib/difflib
 # github.com/rjeczalik/notify v0.9.1
 github.com/rjeczalik/notify
+# github.com/russross/blackfriday/v2 v2.0.1
+github.com/russross/blackfriday/v2
 # github.com/satori/go.uuid v1.2.0
 ## explicit
 github.com/satori/go.uuid
 # github.com/shirou/gopsutil v2.20.5+incompatible
 github.com/shirou/gopsutil/cpu
 github.com/shirou/gopsutil/internal/common
+# github.com/shurcooL/sanitized_anchor_name v1.0.0
+github.com/shurcooL/sanitized_anchor_name
 # github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
+# github.com/urfave/cli v1.22.1
+## explicit
+github.com/urfave/cli
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 ## explicit
 # go.etcd.io/bbolt v1.3.5
@@ -223,6 +232,9 @@ gopkg.in/h2non/gock.v1
 ## explicit
 # gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 gopkg.in/natefinch/npipe.v2
+# gopkg.in/urfave/cli.v1 v1.20.0
+## explicit
+gopkg.in/urfave/cli.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit
 gopkg.in/yaml.v2

@@ -19,6 +19,7 @@ require (
 	github.com/onsi/gomega v1.10.4
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.6.1
+	github.com/urfave/cli v1.22.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	go.etcd.io/bbolt v1.3.5 // indirect
 	go.uber.org/zap v1.16.0
@@ -28,5 +29,6 @@ require (
 	gopkg.in/guregu/null.v3 v3.5.0
 	gopkg.in/h2non/gock.v1 v1.0.16
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
+	gopkg.in/urfave/cli.v1 v1.20.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
