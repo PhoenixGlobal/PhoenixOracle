@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/adapters"
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store/models"
+	"fmt"
 	"github.com/asdine/storm"
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,7 @@ func (self *JobsController) Index(c *gin.Context) {
 }
 
 func (tc *JobsController) Create(c *gin.Context) {
+	fmt.Println("22222222222222222222222")
 	j := models.NewJob()
 	if err := c.ShouldBindJSON(&j); err != nil {
 		c.JSON(500, gin.H{

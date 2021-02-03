@@ -7,6 +7,7 @@ import (
 )
 
 type Application struct {
+	LogListener *LogListener
 	Scheduler *Scheduler
 	Store     *store.Store
 }
@@ -15,6 +16,7 @@ func NewApplication(config store.Config) *Application {
 	store := store.NewStore(config)
 	logger.SetLoggerDir(config.RootDir)
 	return &Application{
+		LogListener: &LogListener{Store: store},
 		Scheduler: NewScheduler(store),
 		Store:     store,
 	}
@@ -22,6 +24,7 @@ func NewApplication(config store.Config) *Application {
 
 func (self *Application) Start() error {
 	self.Store.Start()
+	self.LogListener.Start()
 	return self.Scheduler.Start()
 }
 
@@ -29,6 +32,7 @@ func (self *Application) Stop() error {
 	defer logger.Sync()
 	logger.Info("Gracefully exiting...")
 	self.Scheduler.Stop()
+	self.LogListener.Stop()
 	return self.Store.Close()
 }
 

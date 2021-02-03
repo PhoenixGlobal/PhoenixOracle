@@ -259,3 +259,12 @@ func NewEthAddress() common.Address {
 	rand.Read(b)
 	return common.BytesToAddress(b)
 }
+
+func NewJobWithLogInitiator() models.Job {
+	j := NewJob()
+	j.Initiators = []models.Initiator{{
+		Type:    "ethLog",
+		Address: NewEthAddress(),
+	}}
+	return j
+}

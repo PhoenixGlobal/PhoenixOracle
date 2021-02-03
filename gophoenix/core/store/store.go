@@ -28,6 +28,10 @@ func NewStore(config Config) *Store {
 	if err != nil {
 		logger.Fatal(err)
 	}
+	subrpc, err := rpc.Dial(config.EthereumSubscriptionURL())
+	if err != nil {
+		logger.Fatal(err)
+	}
 	keyStore := NewKeyStore(config.KeysDir())
 	return &Store{
 		ORM:       orm,
@@ -39,6 +43,7 @@ func NewStore(config Config) *Store {
 			EthClient: &EthClient{ethrpc},
 			KeyStore:  keyStore,
 			ORM:       orm,
+			Subscription: &EthClient{subrpc},
 		},
 	}
 }

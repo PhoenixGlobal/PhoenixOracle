@@ -24,7 +24,7 @@ func TestCreateTasks(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/job_integration.json")
-	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
@@ -263,5 +263,46 @@ func TestShowJobUnauthenticated(t *testing.T) {
 	resp, err := http.Get(server.URL + "/v2/jobs/" + "garbage")
 	assert.Nil(t, err)
 	assert.Equal(t, 401, resp.StatusCode, "Response should be forbidden")
+}
+
+
+func TestCreateJobWithEthLogIntegration(t *testing.T) {
+	RegisterTestingT(t)
+	t.Parallel()
+	app := NewApplication()
+	server := app.NewServer()
+	eth := app.MockEthClient()
+	defer app.Stop()
+
+	jsonStr := LoadJSON("./fixture/eth_log_job.json")
+	address, _ := utils.StringToAddress("0x3cCad4715152693fE3BC4460591e3D3Fbd071b42")
+	resp, _ := BasicAuthPost(
+		server.URL+"/v2/jobs",
+		"application/json",
+		bytes.NewBuffer(jsonStr),
+	)
+	respJSON := JobJSONFromResponse(resp.Body)
+	defer resp.Body.Close()
+
+	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
+	var j models.Job
+	app.Store.One("ID", respJSON.ID, &j)
+
+	var initr models.Initiator
+	app.Store.One("JobID", j.ID, &initr)
+	assert.Equal(t, "ethLog", initr.Type)
+	assert.Equal(t, address, initr.Address)
+
+	logs := make(chan store.EventLog, 1)
+	eth.RegisterSubscription("logs", logs)
+	app.Start()
+
+	logs <- store.EventLog{Address: address}
+
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		app.Store.Where("JobID", respJSON.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(1))
 }
 

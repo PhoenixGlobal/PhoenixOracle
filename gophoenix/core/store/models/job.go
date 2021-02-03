@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/mrwonko/cron"
 	uuid "github.com/satori/go.uuid"
 	"time"
@@ -61,9 +62,10 @@ type Initiator struct {
 	ID       int    `storm:"id,increment"`
 	JobID    string `storm:"index"`
 	Type     string `json:"type" storm:"index"`
-	Schedule Cron   `json:"schedule"`
-	Time     Time   `json:"time"`
-	Ran      bool   `json:"ranAt"`
+	Schedule Cron   `json:"schedule,omitempty"`
+	Time     Time   `json:"time,omitempty"`
+	Ran      bool   `json:"ranAt,omitempty"`
+	Address  common.Address `json:"address,omitempty" storm:"index"`
 }
 
 type Time struct {

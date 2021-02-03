@@ -2,20 +2,22 @@ package store
 
 import (
 	"PhoenixOracle/gophoenix/core/utils"
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/rpc"
 	"strconv"
 )
 
 type EthClient struct {
-	Caller
+	CallerSubscriber
 }
 
-type Caller interface {
+type CallerSubscriber interface {
 	Call(result interface{}, method string, args ...interface{}) error
-	//EthSubscribe(context.Context, interface{}, ...interface{}) (*rpc.ClientSubscription, error)
+	EthSubscribe(context.Context, interface{}, ...interface{}) (*rpc.ClientSubscription, error)
 }
 
 func (self *EthClient) GetNonce(account accounts.Account) (uint64, error) {
@@ -52,14 +54,6 @@ type TxReceipt struct {
 	Hash        common.Hash `json:"transactionHash"`
 }
 
-type EventLog struct {
-	Address   common.Address  `json:"address"`
-	BlockHash common.Hash     `json:"blockHash"`
-	TxHash    common.Hash     `json:"transactionHash"`
-	Data      hexutil.Bytes   `json:"data"`
-	Topics    []hexutil.Bytes `json:"topics"`
-}
-
 func (self *TxReceipt) UnmarshalJSON(b []byte) error {
 	type Rcpt struct {
 		BlockNumber string `json:"blockNumber"`
@@ -79,14 +73,20 @@ func (self *TxReceipt) UnmarshalJSON(b []byte) error {
 	}
 	return nil
 }
-//
-//func (self *EthClient) Subscribe(channel chan EventLog, address string) error {
-//	ctx := context.Background()
-//	_, err := self.EthSubscribe(ctx, channel, "logs", address)
-//	return err
-//}
+
+func (self *EthClient) Subscribe(channel chan EventLog, address string) error {
+	ctx := context.Background()
+	_, err := self.EthSubscribe(ctx, channel, "logs", address)
+	fmt.Println("1111111111111111111111111111111")
+	return err
+}
 
 
 func (self *TxReceipt) Unconfirmed() bool {
 	return self.Hash.String() == ""
+}
+
+type EventLog struct {
+	Address   common.Address `json:"address"`
+	BlockHash common.Hash    `json:"blockHash"`
 }

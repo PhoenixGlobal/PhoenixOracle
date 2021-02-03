@@ -80,6 +80,10 @@ func LoggerWriter() *Logger {
 	return logger
 }
 
+func Errorw(msg string, keysAndValues ...interface{}) {
+	logger.Errorw(msg, keysAndValues...)
+}
+
 func Infow(msg string, keysAndValues ...interface{}) {
 	logger.Infow(msg, keysAndValues...)
 }

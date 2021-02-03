@@ -10,35 +10,35 @@ contract('phoenixClient', () => {
         oc = await phoenix.new({from : oracle});
     });
 
-    it("has a limited public interface", () => {
-        testApi.checkPublicABI(phoenix, [
-            "transferOwnership",
-            "requestData",
-            "fulfillData",
-        ]);
-    });
-
-    describe("#transferOwnership", () => {
-        context("when called by the owner", () => {
-            beforeEach( async () => {
-                await oc.transferOwnership(stranger, {from: oracle});
-            });
-
-            it("can change the owner", async () => {
-                let owner = await oc.owner.call();
-                assert.isTrue(web3.utils.isAddress(owner));
-                assert.equal(stranger, owner);
-            });
-        });
-
-        context("when called by a non-owner", () => {
-            it("cannot change the owner", async () => {
-                await testApi.assertActionThrows(async () => {
-                    await oc.transferOwnership(stranger, {from: stranger});
-                });
-            });
-        });
-    });
+    // it("has a limited public interface", () => {
+    //     testApi.checkPublicABI(phoenix, [
+    //         "transferOwnership",
+    //         "requestData",
+    //         "fulfillData",
+    //     ]);
+    // });
+    //
+    // describe("#transferOwnership", () => {
+    //     context("when called by the owner", () => {
+    //         beforeEach( async () => {
+    //             await oc.transferOwnership(stranger, {from: oracle});
+    //         });
+    //
+    //         it("can change the owner", async () => {
+    //             let owner = await oc.owner.call();
+    //             assert.isTrue(web3.utils.isAddress(owner));
+    //             assert.equal(stranger, owner);
+    //         });
+    //     });
+    //
+    //     context("when called by a non-owner", () => {
+    //         it("cannot change the owner", async () => {
+    //             await testApi.assertActionThrows(async () => {
+    //                 await oc.transferOwnership(stranger, {from: stranger});
+    //             });
+    //         });
+    //     });
+    // });
 
     describe("#requestData", () => {
         it("logs an event", async () => {
@@ -52,56 +52,56 @@ contract('phoenixClient', () => {
             assert.equal(to, testApi.hexToAddress(log.args[1]))
         });
 
-        it("increments the nonce", async () => {
-            let tx1 = await oc.requestData(to, fID);
-            let nonce1 = web3.utils.toDecimal(tx1.receipt.logs[0].args[0]);
-            let tx2 = await oc.requestData(to, fID);
-            let nonce2 = web3.utils.toDecimal(tx2.receipt.logs[0].args[0]);
-
-            assert.notEqual(nonce1, nonce2);
-        });
-    });
-
-    describe("#fulfillData", () => {
-        let mock, nonce;
-
-        beforeEach(async () => {
-            mock = await GetterSetter.new();
-            console.log("22222222222222222222")
-            console.log(mock.address)
-            let funcId =  testApi.functionID("setValue(bytes32)")
-            console.log(funcId)
-            let req = await oc.requestData(mock.address, funcId);
-            nonce = web3.utils.toDecimal(req.receipt.logs[0].args[0]);
-        });
-
-        // context("when the called by a non-owner", () => {
-        //     it("raises an error", async () => {
-        //         await testApi.assertActionThrows(async () => {
-        //             await oc.fulfillData(nonce, "Hello World!", {from: stranger});
-        //         });
-        //     });
-        // });
+        // it("increments the nonce", async () => {
+        //     let tx1 = await oc.requestData(to, fID);
+        //     let nonce1 = web3.utils.toDecimal(tx1.receipt.logs[0].args[0]);
+        //     let tx2 = await oc.requestData(to, fID);
+        //     let nonce2 = web3.utils.toDecimal(tx2.receipt.logs[0].args[0]);
         //
-        // context("when called by an owner", () => {
-        //     it("raises an error if the request ID does not exist", async () => {
-        //         await testApi.assertActionThrows(async () => {
-        //             await oc.fulfillData(nonce + 1, "Hello World!", {from: oracle});
-        //         });
-        //     });
-        //
-            it("sets the value on the requested contract", async () => {
-                await oc.fulfillData(nonce, "Hello World!", {from: oracle});
-                let current = await mock.value.call();
-                assert.equal("Hello World!", web3.utils.toUtf8(current));
-            });
-        //
-        //     it("does not allow a request to be fulfilled twice", async () => {
-        //         await oc.fulfillData(nonce, "First message!", {from: oracle});
-        //         await testApi.assertActionThrows(async () => {
-        //             await oc.fulfillData(nonce, "Second message!!", {from: oracle});
-        //         });
-        //     });
+        //     assert.notEqual(nonce1, nonce2);
         // });
     });
+
+    // describe("#fulfillData", () => {
+    //     let mock, nonce;
+    //
+    //     beforeEach(async () => {
+    //         mock = await GetterSetter.new();
+    //         console.log("22222222222222222222")
+    //         console.log(mock.address)
+    //         let funcId =  testApi.functionID("setValue(bytes32)")
+    //         console.log(funcId)
+    //         let req = await oc.requestData(mock.address, funcId);
+    //         nonce = web3.utils.toDecimal(req.receipt.logs[0].args[0]);
+    //     });
+    //
+    //     // context("when the called by a non-owner", () => {
+    //     //     it("raises an error", async () => {
+    //     //         await testApi.assertActionThrows(async () => {
+    //     //             await oc.fulfillData(nonce, "Hello World!", {from: stranger});
+    //     //         });
+    //     //     });
+    //     // });
+    //     //
+    //     // context("when called by an owner", () => {
+    //     //     it("raises an error if the request ID does not exist", async () => {
+    //     //         await testApi.assertActionThrows(async () => {
+    //     //             await oc.fulfillData(nonce + 1, "Hello World!", {from: oracle});
+    //     //         });
+    //     //     });
+    //     //
+    //         it("sets the value on the requested contract", async () => {
+    //             await oc.fulfillData(nonce, "Hello World!", {from: oracle});
+    //             let current = await mock.value.call();
+    //             assert.equal("Hello World!", web3.utils.toUtf8(current));
+    //         });
+    //     //
+    //     //     it("does not allow a request to be fulfilled twice", async () => {
+    //     //         await oc.fulfillData(nonce, "First message!", {from: oracle});
+    //     //         await testApi.assertActionThrows(async () => {
+    //     //             await oc.fulfillData(nonce, "Second message!!", {from: oracle});
+    //     //         });
+    //     //     });
+    //     // });
+    // });
 });

@@ -31,6 +31,12 @@ func initializeDatabase(path string) *storm.DB {
 	return db
 }
 
+func (self *ORM) FindJob(id string) (Job, error) {
+	job := Job{}
+	err := self.One("ID", id, &job)
+	return job, err
+}
+
 func (self *ORM) InitBucket(model interface{}) error {
 	return self.Init(model)
 }
