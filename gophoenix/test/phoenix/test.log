@@ -17,3 +17,4 @@
 {"level":"info","ts":1611647500.6030002,"caller":"logger/logger.go:84","msg":"Task pending","task":1,"result":"","job":"0ed2f0a2-3389-4681-9be2-b33c545c9eca","run":"759acf62-7fb7-499a-a7ea-84cb1c736c3c","status":"in progress"}
 {"level":"info","ts":1611647694.09,"caller":"services/job_runner.go:17","msg":"starting job","job":"1e4a8413-7b52-4421-8a3d-641c67410270","run":"53e5f771-b57a-4acf-9d72-5a551daead7a","status":"in progress"}
 {"level":"info","ts":1611647694.145,"caller":"logger/logger.go:84","msg":"Task finished","task":0,"result":"","job":"1e4a8413-7b52-4421-8a3d-641c67410270","run":"53e5f771-b57a-4acf-9d72-5a551daead7a","status":"in progress"}
+{"level":"info","ts":1612347044.911,"caller":"services/job_runner.go:17","msg":"starting job","job":"608e3214-7333-4906-a0ff-ac25dde7a926","run":"0026d7bd-5f51-43d2-a551-0588da7095f3","status":"in progress"}
