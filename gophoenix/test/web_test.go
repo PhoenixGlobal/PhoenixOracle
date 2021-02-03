@@ -150,7 +150,7 @@ func TestCreateJobIntegration(t *testing.T) {
 	assert.Equal(t, hash.String(), jobRun.Result.Value())
 }
 
-func TestCreateJobWithRunAt(t *testing.T) {
+func TestCreateJobWithRunAtIntegration(t *testing.T) {
 	RegisterTestingT(t)
 	t.Parallel()
 	app := NewApplication()

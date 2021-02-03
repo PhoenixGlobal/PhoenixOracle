@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestLoadingSavedSchedules(t *testing.T) {
@@ -98,4 +99,35 @@ func TestAddJobWhenStopped(t *testing.T) {
 		_ = store.Where("JobID", j.ID, &jobRuns)
 		return jobRuns
 	}).Should(HaveLen(1))
+}
+
+func TestOneTimeRunJobAt(t *testing.T) {
+	RegisterTestingT(t)
+	t.Parallel()
+
+	store := NewStore()
+	defer CleanUpStore(store)
+
+	ot := services.OneTime{
+		Clock: &NeverClock{},
+		Store: store,
+	}
+	ot.Start()
+	j := NewJob()
+	assert.Nil(t, store.SaveJob(j))
+
+	var finished bool
+	go func() {
+		ot.RunJobAt(models.Time{time.Now().Add(time.Hour)}, j)
+		finished = true
+	}()
+
+	ot.Stop()
+
+	Eventually(func() bool {
+		return finished
+	}).Should(Equal(true))
+	jobRuns := []models.JobRun{}
+	assert.Nil(t, store.Where("JobID", j.ID, &jobRuns))
+	assert.Equal(t, 0, len(jobRuns))
 }
