@@ -150,6 +150,36 @@ func TestCreateJobIntegration(t *testing.T) {
 	assert.Equal(t, hash.String(), jobRun.Result.Value())
 }
 
+func TestCreateJobWithRunAt(t *testing.T) {
+	RegisterTestingT(t)
+	t.Parallel()
+	app := NewApplication()
+	app.InstantClock()
+	server := app.NewServer()
+	defer app.Stop()
+
+	jsonStr := LoadJSON("../internal/fixtures/web/run_at_job.json")
+	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	respJSON := JobJSONFromResponse(resp.Body)
+	defer resp.Body.Close()
+
+	assert.Equal(t, 200, resp.StatusCode, "Response should be success")
+	var j models.Job
+	app.Store.One("ID", respJSON.ID, &j)
+
+	var initr models.Initiator
+	app.Store.One("JobID", j.ID, &initr)
+	assert.Equal(t, "runAt", initr.Type)
+	assert.Equal(t, "2018-01-08T18:12:01Z", initr.Time.ISO8601())
+
+	app.Start()
+	jobRuns := []models.JobRun{}
+	Eventually(func() []models.JobRun {
+		app.Store.Where("JobID", respJSON.ID, &jobRuns)
+		return jobRuns
+	}).Should(HaveLen(1))
+}
+
 func TestCreateInvalidTasks(t *testing.T) {
 	t.Parallel()
 	//fixtureprepare.SetUpDB()

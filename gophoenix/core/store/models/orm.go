@@ -3,7 +3,6 @@ package models
 import (
 	"PhoenixOracle/gophoenix/core/utils"
 	"github.com/asdine/storm"
-	"github.com/asdine/storm/q"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"log"
@@ -58,18 +57,9 @@ func emptySlice(to interface{}) {
 }
 
 
-func (self *ORM) JobsWithCron() ([]Job, error) {
-	initrs := []Initiator{}
-	self.Where("Type", "cron", &initrs)
-	jobIDs := []string{}
-	for _, initr := range initrs {
-		jobIDs = append(jobIDs, initr.JobID)
-	}
-	jobs := []Job{}
-	err := self.Select(q.In("ID",jobIDs)).Find(&jobs)
-	if err == storm.ErrNotFound {
-		return jobs, nil
-	}
+func (self *ORM) Jobs() ([]Job, error) {
+	var jobs []Job
+	err := self.All(&jobs)
 	return jobs, err
 }
 
