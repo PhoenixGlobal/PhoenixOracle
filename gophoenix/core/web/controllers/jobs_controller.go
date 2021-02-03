@@ -42,6 +42,12 @@ func (tc *JobsController) Create(c *gin.Context) {
 	}
 }
 
+type JobPresenter struct {
+	models.Job
+	Runs []models.JobRun `json:"runs,omitempty"`
+}
+
+
 func (tc *JobsController) Show(c *gin.Context) {
 	id := c.Param("id")
 	var j models.Job
@@ -55,8 +61,12 @@ func (tc *JobsController) Show(c *gin.Context) {
 		c.JSON(500, gin.H{
 			"errors": []string{err.Error()},
 		})
+	} else if runs, err := tc.App.Store.JobRunsFor(j); err != nil {
+		c.JSON(500, gin.H{
+			"errors": []string{err.Error()},
+		})
 	} else {
-		c.JSON(200, j)
+		c.JSON(200, JobPresenter{j, runs})
 	}
 }
 

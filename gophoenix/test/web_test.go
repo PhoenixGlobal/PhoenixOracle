@@ -5,6 +5,7 @@ import (
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
+	"PhoenixOracle/gophoenix/core/web/controllers"
 	"bytes"
 	"encoding/json"
 	. "github.com/onsi/gomega"
@@ -227,8 +228,9 @@ func TestShowJobs(t *testing.T) {
 	defer app.Stop()
 
 	j := NewJobWithSchedule("*****")
-
 	app.Store.Save(&j)
+	jr := j.NewRun()
+	app.Store.Save(&jr)
 
 	resp, err := BasicAuthGet(server.URL + "/v2/jobs/" + j.ID)
 	assert.Nil(t, err)
@@ -236,9 +238,10 @@ func TestShowJobs(t *testing.T) {
 	b, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 
-	var respJob models.Job
+	var respJob controllers.JobPresenter
 	json.Unmarshal(b, &respJob)
 	assert.Equal(t, respJob.Initiators[0].Schedule, j.Initiators[0].Schedule, "should have the same schedule")
+	assert.Equal(t, respJob.Runs[0].ID, jr.ID, "should have the job runs")
 }
 
 func TestShowNotFoundJobs(t *testing.T) {

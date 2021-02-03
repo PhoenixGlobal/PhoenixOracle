@@ -7,6 +7,7 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
 	"PhoenixOracle/gophoenix/core/web"
+	"PhoenixOracle/gophoenix/core/web/controllers"
 	"encoding/json"
 	"errors"
 	"github.com/urfave/cli"
@@ -57,7 +58,7 @@ func (self *Client) ShowJob(c *cli.Context) error {
 		return self.cliError(err)
 	}
 	defer resp.Body.Close()
-	var job models.Job
+	var job controllers.JobPresenter
 	return self.deserializeResponse(resp, &job)
 }
 
