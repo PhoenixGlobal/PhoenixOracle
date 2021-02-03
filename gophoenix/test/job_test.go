@@ -5,6 +5,7 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestSave(t *testing.T) {
@@ -36,4 +37,10 @@ func TestJobNewRun(t *testing.T) {
 	adapter, _ := adapters.For(job.Tasks[0])
 	assert.NotNil(t, adapter)
 
+}
+
+func TestTimeDurationFromNow(t *testing.T) {
+	future := models.Time{time.Now().Add(time.Second)}
+	duration := future.DurationFromNow()
+	assert.True(t, 0 < duration)
 }

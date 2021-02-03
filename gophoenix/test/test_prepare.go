@@ -5,11 +5,11 @@ import (
 	"PhoenixOracle/gophoenix/core/services"
 	"PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
+	"PhoenixOracle/gophoenix/core/utils"
 	"PhoenixOracle/gophoenix/core/web"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"github.com/araddon/dateparse"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
@@ -35,6 +35,7 @@ type TestStore struct {
 const testRootDir = "./tmp/test"
 const testUsername = "testusername"
 const testPassword = "testpassword"
+const Username = "testusername"
 const Password = "password"
 
 func init() {
@@ -190,29 +191,17 @@ func AddPrivateKey(config store.Config, src string) {
 	copyFile(src, dst)
 }
 
-func TimeParse(s string) time.Time {
-	t, err := dateparse.ParseAny(s)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return t
-}
-
 func BasicAuthPost(url string, contentType string, body io.Reader) (*http.Response, error) {
-	client := &http.Client{}
-	request, _ := http.NewRequest("POST", url, body)
-	request.Header.Set("Content-Type", contentType)
-	request.SetBasicAuth(testUsername, testPassword)
-	resp, err := client.Do(request)
-	return resp, err
+	return utils.BasicAuthPost(
+		Username,
+		Password,
+		url,
+		contentType,
+		body)
 }
 
 func BasicAuthGet(url string) (*http.Response, error) {
-	client := &http.Client{}
-	request, _ := http.NewRequest("GET", url, nil)
-	request.SetBasicAuth(testUsername, testPassword)
-	resp, err := client.Do(request)
-	return resp, err
+	return utils.BasicAuthGet(Username, Password, url)
 }
 
 func NewJob() models.Job {

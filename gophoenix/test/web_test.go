@@ -158,7 +158,7 @@ func TestCreateJobWithRunAtIntegration(t *testing.T) {
 	server := app.NewServer()
 	defer app.Stop()
 
-	jsonStr := LoadJSON("../internal/fixtures/web/run_at_job.json")
+	jsonStr := LoadJSON("./fixture/run_at_jobs.json")
 	resp, _ := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	respJSON := JobJSONFromResponse(resp.Body)
 	defer resp.Body.Close()

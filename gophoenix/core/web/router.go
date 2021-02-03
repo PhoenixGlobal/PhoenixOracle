@@ -18,6 +18,7 @@ func Router(app *services.Application) *gin.Engine {
 	basicAuth := gin.BasicAuth(gin.Accounts{config.BasicAuthUsername: config.BasicAuthPassword})
 	engine.Use(loggerFunc(logger.LoggerWriter()), gin.Recovery(), basicAuth)
 	t := controllers.JobsController{app}
+	engine.GET("/jobs", t.Index)
 	engine.POST("/jobs", t.Create)
 	engine.GET("/jobs/:id", t.Show)
 

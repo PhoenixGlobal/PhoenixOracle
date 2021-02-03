@@ -2,14 +2,21 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/araddon/dateparse"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
+	"io"
+	"log"
 	"math/big"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func SenderFromTxHex(value string, chainID uint64) (common.Address, error) {
@@ -62,5 +69,39 @@ func StringToAddress(str string) (common.Address, error) {
 		return common.Address{}, err
 	}
 	return common.BytesToAddress(b), nil
+}
+
+func TimeParse(s string) time.Time {
+	t, err := dateparse.ParseAny(s)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return t
+}
+
+func BasicAuthPost(username, password, url string, contentType string, body io.Reader) (*http.Response, error) {
+	client := &http.Client{}
+	request, _ := http.NewRequest("POST", url, body)
+	request.Header.Set("Content-Type", contentType)
+	request.SetBasicAuth(username, password)
+	resp, err := client.Do(request)
+	return resp, err
+}
+
+func BasicAuthGet(username, password, url string) (*http.Response, error) {
+	client := &http.Client{}
+	request, _ := http.NewRequest("GET", url, nil)
+	request.SetBasicAuth(username, password)
+	resp, err := client.Do(request)
+	return resp, err
+}
+
+func PrettyPrintJSON(v interface{}) error {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+	_, err = os.Stdout.Write(b)
+	return err
 }
 

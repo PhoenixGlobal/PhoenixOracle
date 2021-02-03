@@ -506,3 +506,7 @@
 {"level":"info","ts":1612320152.099,"msg":"[Gracefully exiting...]"}
 {"level":"info","ts":1612320152.1260002,"msg":"starting job","job":"fb7bbd44-513b-41f4-a88c-e9a8123cb310","run":"9eef3709-3d3b-487a-81ee-41859936b26f","status":"in progress"}
 {"level":"info","ts":1612320152.1699998,"msg":"Task finished","task":0,"result":"","job":"fb7bbd44-513b-41f4-a88c-e9a8123cb310","run":"9eef3709-3d3b-487a-81ee-41859936b26f","status":"in progress"}
+{"level":"info","ts":1612320834.52,"msg":"Web request","method":"GET","status":404,"path":"/jobs","query":"","body":"","clientIP":"127.0.0.1","comment":"","servedAt":"2021/02/03 - 10:53:54","latency":"0s"}
+{"level":"info","ts":1612320834.539,"msg":"[Gracefully exiting...]"}
+{"level":"info","ts":1612321242.956,"msg":"Web request","method":"POST","status":401,"path":"/jobs","query":"","body":"{\r\n  \"initiators\": [ { \"type\": \"runAt\", \"time\": \"2018-01-08T18:12:01.103Z\" } ],\r\n  \"tasks\": [ { \"type\": \"NoOp\" } ]\r\n}\r\n","clientIP":"127.0.0.1","comment":"","servedAt":"2021/02/03 - 11:00:42","latency":"0s"}
+{"level":"info","ts":1612321242.956,"msg":"[Gracefully exiting...]"}
