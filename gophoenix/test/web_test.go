@@ -24,7 +24,7 @@ func TestCreateTasks(t *testing.T) {
 	defer app.Stop()
 
 	jsonStr := LoadJSON("./fixture/job_integration.json")
-	resp, err := BasicAuthPost(server.URL+"/jobs", "application/json", bytes.NewBuffer(jsonStr))
+	resp, err := BasicAuthPost(server.URL+"/v2/jobs", "application/json", bytes.NewBuffer(jsonStr))
 	//if err != nil {
 	//	t.Fatal(err)
 	//}
