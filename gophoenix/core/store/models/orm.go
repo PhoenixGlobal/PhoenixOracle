@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/utils"
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/q"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"log"
 	"math/big"
@@ -97,11 +98,11 @@ func (self *ORM) PendingJobRuns() ([]JobRun, error) {
 	return runs, err
 }
 
-func (self *ORM) CreateEthTx(
-	from string, nonce uint64, to string, data string, value *big.Int,
+func (self *ORM) CreateTx(
+	from common.Address, nonce uint64, to common.Address, data []byte, value *big.Int,
 	gasLimit uint64,
-) (*EthTx, error) {
-	tx := EthTx{
+) (*Tx, error) {
+	tx := Tx{
 		From:     from,
 		To:       to,
 		Nonce:    nonce,
@@ -112,52 +113,52 @@ func (self *ORM) CreateEthTx(
 	return &tx, self.Save(&tx)
 }
 
-func (self *ORM) ConfirmTx(txr *EthTx, txat *EthTxAttempt) error {
-	tx, err := self.Begin(true)
+func (self *ORM) ConfirmTx(txr *Tx, txat *TxAttempt) error {
+	dbtx, err := self.Begin(true)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer dbtx.Rollback()
 
 	txat.Confirmed = true
-	txr.EthTxAttempt = *txat
+	txr.TxAttempt = *txat
 
-	if err := tx.Save(txr); err != nil {
+	if err := dbtx.Save(txr); err != nil {
 		return err
 	}
-	if err := tx.Save(txat); err != nil {
+	if err := dbtx.Save(txat); err != nil {
 		return err
 	}
-	return tx.Commit()
+	return dbtx.Commit()
 }
 
-func (self *ORM) AttemptsFor(id uint64) ([]*EthTxAttempt, error) {
-	attempts := []*EthTxAttempt{}
-	if err := self.Where("EthTxID", id, &attempts); err != nil {
+func (self *ORM) AttemptsFor(id uint64) ([]*TxAttempt, error) {
+	attempts := []*TxAttempt{}
+	if err := self.Where("TxID", id, &attempts); err != nil {
 		return attempts, err
 	}
 	return attempts, nil
 }
 
 func (self *ORM) AddAttempt(
-	tx *EthTx,
-	signable *types.Transaction,
+	tx *Tx,
+	etx *types.Transaction,
 	blkNum uint64,
-) (*EthTxAttempt, error) {
-	hex, err := utils.EncodeTxToHex(signable)
+) (*TxAttempt, error) {
+	hex, err := utils.EncodeTxToHex(etx)
 	if err != nil {
 		return nil, err
 	}
-	attempt := &EthTxAttempt{
-		Hash:      signable.Hash().String(),
-		GasPrice:  signable.GasPrice(),
-		Hex:       hex,
-		EthTxID:   tx.ID,
-		SentAt:    blkNum,
+	attempt := &TxAttempt{
+		Hash:     etx.Hash(),
+		GasPrice: etx.GasPrice(),
+		Hex:      hex,
+		TxID:     tx.ID,
+		SentAt:   blkNum,
 	}
 
 	if !tx.Confirmed {
-		tx.EthTxAttempt = *attempt
+		tx.TxAttempt = *attempt
 	}
 	dbtx, err := self.Begin(true)
 	if err != nil {

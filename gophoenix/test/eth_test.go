@@ -4,6 +4,7 @@ import (
 	strpkg "PhoenixOracle/gophoenix/core/store"
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
+	"encoding/hex"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -15,9 +16,10 @@ func TestEthCreateTx(t *testing.T) {
 	defer app.Stop()
 	manager := store.Eth
 
-	to := "0xb70a511baC46ec6442aC6D598eaC327334e634dB"
-	data := "0000abcdef"
-	hash := "0x86300ee06a57eb27fbd8a6d5380783d4f8cb7210747689fe452e40f049d3de08"
+	to := NewEthAddress()
+	data, err := hex.DecodeString("0000abcdef")
+	assert.Nil(t, err)
+	hash := NewTxHash()
 	sentAt := uint64(23456)
 	nonce := uint64(256)
 	ethMock := app.MockEthClient()
@@ -27,8 +29,8 @@ func TestEthCreateTx(t *testing.T) {
 
 	a, err := manager.CreateTx(to, data)
 	assert.Nil(t, err)
-	tx := models.EthTx{}
-	assert.Nil(t, store.One("ID", a.EthTxID, &tx))
+	tx := models.Tx{}
+	assert.Nil(t, store.One("ID", a.TxID, &tx))
 	assert.Nil(t, err)
 	assert.Equal(t, nonce, tx.Nonce)
 	assert.Equal(t, data, tx.Data)
@@ -51,13 +53,13 @@ func TestEthEnsureTxConfirmedBeforeThreshold(t *testing.T) {
 	config := store.Config
 	eth := store.Eth
 	sentAt := uint64(23456)
-	from := store.KeyStore.GetAccount().Address.String()
+	from := store.KeyStore.GetAccount().Address
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthGasBumpThreshold-1))
 
-	txr := CreateEthTxAndAttempt(store,from, sentAt)
+	txr := CreateTxAndAttempt(store,from, sentAt)
 	attempts, err := store.AttemptsFor(txr.ID)
 	assert.Nil(t, err)
 	a := attempts[0]
@@ -81,14 +83,14 @@ func TestEthEnsureTxConfirmedAtThreshold(t *testing.T) {
 	eth := store.Eth
 
 	sentAt := uint64(23456)
-	from := store.KeyStore.GetAccount().Address.String()
+	from := store.KeyStore.GetAccount().Address
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthGasBumpThreshold))
 	ethMock.Register("eth_sendRawTransaction", NewTxHash())
 
-	txr := CreateEthTxAndAttempt(store, from, sentAt)
+	txr := CreateTxAndAttempt(store, from, sentAt)
 	attempts, err := store.AttemptsFor(txr.ID)
 	assert.Nil(t, err)
 	a := attempts[0]
@@ -113,7 +115,7 @@ func TestEthEnsureTxConfirmedWhenSafe(t *testing.T) {
 	eth := store.Eth
 
 	sentAt := uint64(23456)
-	from := store.KeyStore.GetAccount().Address.String()
+	from := store.KeyStore.GetAccount().Address
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{
@@ -122,9 +124,9 @@ func TestEthEnsureTxConfirmedWhenSafe(t *testing.T) {
 	})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthMinConfirmations))
 
-	txr := CreateEthTxAndAttempt(store, from, sentAt)
-	a := models.EthTxAttempt{}
-	assert.Nil(t, store.One("EthTxID", txr.ID, &a))
+	txr := CreateTxAndAttempt(store, from, sentAt)
+	a := models.TxAttempt{}
+	assert.Nil(t, store.One("TxID", txr.ID, &a))
 
 	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)
@@ -146,7 +148,7 @@ func TestEthEnsureTxConfirmedWhenWithConfsButNotSafe(t *testing.T) {
 	eth := store.Eth
 
 	sentAt := uint64(23456)
-	from := store.KeyStore.GetAccount().Address.String()
+	from := store.KeyStore.GetAccount().Address
 
 	ethMock := app.MockEthClient()
 	ethMock.Register("eth_getTransactionReceipt", strpkg.TxReceipt{
@@ -155,9 +157,9 @@ func TestEthEnsureTxConfirmedWhenWithConfsButNotSafe(t *testing.T) {
 	})
 	ethMock.Register("eth_blockNumber", utils.Uint64ToHex(sentAt+config.EthMinConfirmations-1))
 
-	txr := CreateEthTxAndAttempt(store, from, sentAt)
-	a := models.EthTxAttempt{}
-	assert.Nil(t, store.One("EthTxID", txr.ID, &a))
+	txr := CreateTxAndAttempt(store, from, sentAt)
+	a := models.TxAttempt{}
+	assert.Nil(t, store.One("TxID", txr.ID, &a))
 
 	confirmed, err := eth.EnsureTxConfirmed(a.Hash)
 	assert.Nil(t, err)

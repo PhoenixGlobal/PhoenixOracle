@@ -4,6 +4,7 @@ import (
 	"PhoenixOracle/gophoenix/core/store/models"
 	"PhoenixOracle/gophoenix/core/utils"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"math/big"
 )
@@ -15,14 +16,14 @@ type Eth struct {
 	ORM      *models.ORM
 }
 
-func (self *Eth) CreateTx(to, data string) (*models.EthTx, error) {
+func (self *Eth) CreateTx(to common.Address, data []byte) (*models.Tx, error) {
 	account := self.KeyStore.GetAccount()
 	nonce, err := self.GetNonce(account)
 	if err != nil {
 		return nil, err
 	}
-	txr, err := self.ORM.CreateEthTx(
-		account.Address.String(),
+	txr, err := self.ORM.CreateTx(
+		account.Address,
 		nonce,
 		to,
 		data,
@@ -44,7 +45,7 @@ func (self *Eth) CreateTx(to, data string) (*models.EthTx, error) {
 
 	return txr, nil
 }
-func (self *Eth) EnsureTxConfirmed(hash string) (bool, error) {
+func (self *Eth) EnsureTxConfirmed(hash common.Hash) (bool, error) {
 	blkNum, err := self.BlockNumber()
 	if err != nil {
 		return false, err
@@ -56,8 +57,8 @@ func (self *Eth) EnsureTxConfirmed(hash string) (bool, error) {
 	if len(attempts) == 0 {
 		return false, fmt.Errorf("Can only ensure transactions with attempts")
 	}
-	txr := models.EthTx{}
-	if err := self.ORM.One("ID", attempts[0].EthTxID, &txr); err != nil {
+	txr := models.Tx{}
+	if err := self.ORM.One("ID", attempts[0].TxID, &txr); err != nil {
 		return false, err
 	}
 
@@ -70,8 +71,8 @@ func (self *Eth) EnsureTxConfirmed(hash string) (bool, error) {
 	return false, nil
 }
 
-func (self *Eth) createAttempt(txr *models.EthTx, gasPrice *big.Int, blkNum uint64,) (*models.EthTxAttempt, error) {
-	signable := txr.Signable(gasPrice)
+func (self *Eth) createAttempt(txr *models.Tx, gasPrice *big.Int, blkNum uint64,) (*models.TxAttempt, error) {
+	signable := txr.EthTx(gasPrice)
 	signable, err := self.KeyStore.SignTx(signable, self.Config.ChainID)
 	if err != nil {
 		return nil, err
@@ -94,21 +95,21 @@ func (self *Eth) sendTransaction(tx *types.Transaction) error {
 	return nil
 }
 
-func (self *Eth) getAttempts(hash string) ([]*models.EthTxAttempt, error) {
-	attempt := &models.EthTxAttempt{}
+func (self *Eth) getAttempts(hash common.Hash) ([]*models.TxAttempt, error) {
+	attempt := &models.TxAttempt{}
 	if err := self.ORM.One("Hash", hash, attempt); err != nil {
-		return []*models.EthTxAttempt{}, err
+		return []*models.TxAttempt{}, err
 	}
-	attempts, err := self.ORM.AttemptsFor(attempt.EthTxID)
+	attempts, err := self.ORM.AttemptsFor(attempt.TxID)
 	if err != nil {
-		return []*models.EthTxAttempt{}, err
+		return []*models.TxAttempt{}, err
 	}
 	return attempts, nil
 }
 
 func (self *Eth) checkAttempt(
-	txr *models.EthTx,
-	txat *models.EthTxAttempt,
+	txr *models.Tx,
+	txat *models.TxAttempt,
 	blkNum uint64,
 ) (bool, error) {
 	receipt, err := self.GetTxReceipt(txat.Hash)
@@ -123,8 +124,8 @@ func (self *Eth) checkAttempt(
 }
 
 func (self *Eth) handleConfirmed(
-	txr *models.EthTx,
-	txat *models.EthTxAttempt,
+	txr *models.Tx,
+	txat *models.TxAttempt,
 	rcpt *TxReceipt,
 	blkNum uint64,
 ) (bool, error) {
@@ -140,8 +141,8 @@ func (self *Eth) handleConfirmed(
 }
 
 func (self *Eth) handleUnconfirmed(
-	txr *models.EthTx,
-	txat *models.EthTxAttempt,
+	txr *models.Tx,
+	txat *models.TxAttempt,
 	blkNum uint64,
 ) (bool, error) {
 	bumpable := txr.Hash == txat.Hash
@@ -152,9 +153,9 @@ func (self *Eth) handleUnconfirmed(
 	return false, nil
 }
 
-func (self *Eth) bumpGas(txat *models.EthTxAttempt, blkNum uint64) error {
-	txr := &models.EthTx{}
-	if err := self.ORM.One("ID", txat.EthTxID, txr); err != nil {
+func (self *Eth) bumpGas(txat *models.TxAttempt, blkNum uint64) error {
+	txr := &models.Tx{}
+	if err := self.ORM.One("ID", txat.TxID, txr); err != nil {
 		return err
 	}
 	gasPrice := new(big.Int).Add(txat.GasPrice, self.Config.EthGasBumpWei)

@@ -2,6 +2,8 @@ package test
 
 import (
 	"PhoenixOracle/gophoenix/core/store/models"
+	"PhoenixOracle/gophoenix/core/utils"
+	"encoding/hex"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
@@ -73,20 +75,21 @@ func TestPendingJobRuns(t *testing.T) {
 	assert.NotContains(t, pendingIDs, npr.ID)
 }
 
-func TestCreatingEthTx(t *testing.T) {
+func TestCreatingTx(t *testing.T) {
 	store := NewStore()
 	defer CleanUpStore(store)
 
-	data := "0987612345abcdef"
-	from := "0x2C83ACd90367e7E0D3762eA31aC77F18faecE874"
-	to := "0x4A7d17De4B3eC94c59BF07764d9A6e97d92A547A"
+	from, _ := utils.StringToAddress("0x2C83ACd90367e7E0D3762eA31aC77F18faecE874")
+	to, _ := utils.StringToAddress("0x4A7d17De4B3eC94c59BF07764d9A6e97d92A547A")
 	value := new(big.Int).Exp(big.NewInt(10), big.NewInt(36), nil)
 	nonce := uint64(1232421)
 	gasLimit := uint64(500000)
-	_, err := store.CreateEthTx(from, nonce, to, data, value, gasLimit)
+	data, err := hex.DecodeString("0987612345abcdef")
+	assert.Nil(t, err)
+	_, err = store.CreateTx(from, nonce, to, data, value, gasLimit)
 	assert.Nil(t, err)
 
-	txs := []models.EthTx{}
+	txs := []models.Tx{}
 	assert.Nil(t, store.Where("Nonce", nonce, &txs))
 	assert.Equal(t, 1, len(txs))
 	tx := txs[0]

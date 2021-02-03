@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/araddon/dateparse"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/go-homedir"
 	"github.com/onsi/gomega"
@@ -298,40 +298,40 @@ func NewJobWithWebInitiator() models.Job {
 	return j
 }
 
-func NewEthTx(from string, sentAt uint64) *models.EthTx {
-	return &models.EthTx{
+func NewTx(from common.Address, sentAt uint64) *models.Tx {
+	return &models.Tx{
 		From:     from,
 		Nonce:    0,
-		Data:     "deadbeef",
+		Data:     []byte{},
 		Value:    big.NewInt(0),
 		GasLimit: uint64(250000),
 	}
 }
 
-func CreateEthTxAndAttempt(
+func CreateTxAndAttempt(
 	store *store.Store,
-	from string,
+	from  common.Address,
 	sentAt uint64,
-) *models.EthTx {
-	txr := NewEthTx(from, sentAt)
+) *models.Tx {
+	txr := NewTx(from, sentAt)
 	if err := store.Save(txr); err != nil {
 		logger.Fatal(err)
 	}
-	_, err := store.AddAttempt(txr, txr.Signable(big.NewInt(1)), sentAt)
+	_, err := store.AddAttempt(txr, txr.EthTx(big.NewInt(1)), sentAt)
 	if err != nil {
 		logger.Fatal(err)
 	}
 	return txr
 }
 
-func NewTxHash() string {
+func NewTxHash() common.Hash {
 	b := make([]byte, 32)
 	rand.Read(b)
-	return hexutil.Encode(b)
+	return common.BytesToHash(b)
 }
 
-func NewEthAddress() string {
+func NewEthAddress() common.Address {
 	b := make([]byte, 20)
 	rand.Read(b)
-	return hexutil.Encode(b)
+	return common.BytesToAddress(b)
 }
