@@ -98,12 +98,12 @@ contract('phoenixClient', () => {
                 console.log(funcId)
                 let req = await oc.requestData(mock.address, "0x58825b10");
                 nonce = web3.utils.toDecimal(req.receipt.logs[0].args[0]);
-                let data32 = "0x68656C6C6F20776F726C64";
-                let hexOfVal = web3.utils.stringToHex("hello world");
+                let hexOfVal = web3.utils.stringToHex("apex");
+                console.log(hexOfVal);
                 await oc.fulfillData(nonce, hexOfVal, {from: oracle});
                 let current = await mock.value.call();
                 console.log(current)
-                assert.equal("Hello World!", web3.utils.toUtf8(current));
+                assert.equal("apex", web3.utils.toUtf8(current));
             });
 
         //     it("does not allow a request to be fulfilled twice", async () => {

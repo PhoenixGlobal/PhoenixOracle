@@ -25,13 +25,19 @@ contract phoenixClient is Ownable{
         nonce += 1;
     }
 
-    function fulfillData(uint _nonce, bytes32 _data)
-        public
-        onlyOwner
+    function fulfillData(uint256 _nonce, bytes32 _data)
+    public
+    onlyOwner
+    hasNonce(_nonce)
     {
         Callback memory cb = callbacks[_nonce];
         (bool success, ) = cb.addr.call(abi.encode(cb.fid, _data));
         require(success);
         delete callbacks[_nonce];
+    }
+
+    modifier hasNonce(uint256 _nonce) {
+        require(callbacks[_nonce].addr != address(0));
+        _;
     }
 }
