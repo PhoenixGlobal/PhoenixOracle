@@ -31,7 +31,7 @@ contract phoenixClient is Ownable{
     hasNonce(_nonce)
     {
         Callback memory cb = callbacks[_nonce];
-        (bool success, ) = cb.addr.call(abi.encode(cb.fid, _data));
+        (bool success, ) = cb.addr.call(abi.encodePacked(cb.fid, _data));
         require(success);
         delete callbacks[_nonce];
     }
